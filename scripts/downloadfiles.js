@@ -39,12 +39,6 @@ function checkEnd() {
 }
 
 function addURL(item) {
-	if (item._source.file_deleted || item._source.file_downloaded) {
-		doneCount++;
-		skippedCount++;
-		return;
-	}
-
 	const file = {
 		dest: '/mnt/hdd/dumps/e621/' + item._source.file_url.replace('https://', ''),
 		url: item._source.file_url,
