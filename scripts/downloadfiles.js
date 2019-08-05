@@ -74,7 +74,9 @@ function downloadDone(file, success, fileDeleted) {
 	const docBody = {};
 	if (success) {
 		docBody.file_downloaded = true;
+		docBody.file_deleted = false;
 	} else if (fileDeleted) {
+		docBody.file_downloaded = false;
 		docBody.file_deleted = true;
 	} else {
 		return;
