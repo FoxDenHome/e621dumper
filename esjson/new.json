@@ -1,0 +1,10 @@
+{
+    "properties": {
+      "tags": {
+        "type": "keyword"
+      },
+      "locked_tags": {
+        "type": "keyword"
+      }
+    }
+}

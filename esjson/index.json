@@ -1,0 +1,157 @@
+{
+  "aliases": {},
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "artist": {
+        "type": "keyword"
+      },
+      "author": {
+        "type": "keyword"
+      },
+      "change": {
+        "type": "long"
+      },
+      "children": {
+        "type": "long"
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "creator_id": {
+        "type": "long"
+      },
+      "delreason": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "fav_count": {
+        "type": "long"
+      },
+      "file_deleted": {
+        "type": "boolean"
+      },
+      "file_downloaded": {
+        "type": "boolean"
+      },
+      "file_ext": {
+        "type": "keyword"
+      },
+      "file_size": {
+        "type": "long"
+      },
+      "file_url": {
+        "type": "keyword"
+      },
+      "has_children": {
+        "type": "boolean"
+      },
+      "has_comments": {
+        "type": "boolean"
+      },
+      "has_notes": {
+        "type": "boolean"
+      },
+      "height": {
+        "type": "long"
+      },
+      "locked_tags": {
+        "type": "keyword"
+      },
+      "locked_tags_artist": {
+        "type": "keyword"
+      },
+      "locked_tags_character": {
+        "type": "keyword"
+      },
+      "locked_tags_copyright": {
+        "type": "keyword"
+      },
+      "locked_tags_general": {
+        "type": "keyword"
+      },
+      "locked_tags_species": {
+        "type": "keyword"
+      },
+      "locked_tags_unknown": {
+        "type": "keyword"
+      },
+      "md5": {
+        "type": "keyword"
+      },
+      "parent_id": {
+        "type": "long"
+      },
+      "preview_height": {
+        "type": "long"
+      },
+      "preview_url": {
+        "type": "keyword"
+      },
+      "preview_width": {
+        "type": "long"
+      },
+      "rating": {
+        "type": "keyword"
+      },
+      "sample_height": {
+        "type": "long"
+      },
+      "sample_url": {
+        "type": "keyword"
+      },
+      "sample_width": {
+        "type": "long"
+      },
+      "score": {
+        "type": "long"
+      },
+      "sources": {
+        "type": "keyword"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "tags_artist": {
+        "type": "keyword"
+      },
+      "tags_character": {
+        "type": "keyword"
+      },
+      "tags_copyright": {
+        "type": "keyword"
+      },
+      "tags_general": {
+        "type": "keyword"
+      },
+      "tags_species": {
+        "type": "keyword"
+      },
+      "tags_unknown": {
+        "type": "keyword"
+      },
+      "width": {
+        "type": "long"
+      }
+    }
+  }
+}

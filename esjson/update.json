@@ -1,0 +1,12 @@
+{
+  "script": {
+    "source": "HashSet tags = new HashSet(); if (ctx._source.tags_general != null) tags.addAll(ctx._source.tags_general); if (ctx._source.tags_artist != null) tags.addAll(ctx._source.tags_artist); if (ctx._source.tags_unknown != null) tags.addAll(ctx._source.tags_unknown); if (ctx._source.tags_copyright != null) tags.addAll(ctx._source.tags_copyright); if (ctx._source.tags_character != null) tags.addAll(ctx._source.tags_character); if (ctx._source.tags_species != null) tags.addAll(ctx._source.tags_species); ctx._source.tags = tags.toArray();",
+    "lang": "painless"
+  },
+  "query": {
+    "bool": {
+      "must_not": { "exists": { "field": "tags" } }
+    }
+  }
+}
+
