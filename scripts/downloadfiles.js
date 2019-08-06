@@ -10,12 +10,12 @@ let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCoun
 const agent = new https.Agent({ keepAlive: true });
 
 const DOWNLOAD_KIND = process.argv[2] || 'file';
-const DEST_FOLDER = `/mnt/hdd/${DOWNLOADED_KIND}/`;
+const DEST_FOLDER = '/mnt/hdd/files/';
 
-const DOWNLOADED_KEY = `${DOWNLOADED_KIND}_downloaded`;
-const DELETED_KEY = `${DOWNLOADED_KIND}_deleted`;
-const URL_KEY = `${DOWNLOADED_KIND}_url`;
-const SIZE_KEY = `${DOWNLOADED_KIND}_size`;
+const DOWNLOADED_KEY = `${DOWNLOAD_KIND}_downloaded`;
+const DELETED_KEY = `${DOWNLOAD_KIND}_deleted`;
+const URL_KEY = `${DOWNLOAD_KIND}_url`;
+const SIZE_KEY = `${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
 let MAX_PROGRESS = 64;
