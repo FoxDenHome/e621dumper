@@ -1,0 +1,12 @@
+{
+  "name": "e621dumper",
+  "version": "1.0.0",
+  "description": "e621 dumper scripts",
+  "author": "Doridian",
+  "license": "ISC",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.3.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
+  }
+}

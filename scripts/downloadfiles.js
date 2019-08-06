@@ -4,7 +4,10 @@ const config = require('./config.js');
 
 const { Client } = require('@elastic/elasticsearch');
 const fs = require('fs');
+const path = require('path');
 const https = require('https');
+const { mkdirpFor } = require('./mkdirp');
+const pathFixer = require('./pathFixer');
 
 const queue = [];
 let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCount = 0, totalCount = 0;
@@ -62,7 +65,8 @@ function addURL(item) {
 	}
 	gotUrls.add(file.url);
 
-	file.dest = DEST_FOLDER + file.url.replace(/^https?:\/\//, '');
+	file.dest = DEST_FOLDER + pathFixer(file.url.replace(/^https?:\/\//, ''));
+	mkdirpFor(file.dest);
 
 	fs.stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
