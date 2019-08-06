@@ -13,23 +13,11 @@ let inProgress = 0;
 let MAX_PROGRESS = 16;
 let esDone = false;
 
-function scanMaxProc(reload) {
-	/*if (reload) {
-		const c = fs.readFileSync('./verifydump_maxproc').toString('utf8');
-		MAX_PROGRESS = parseInt(c.trim());
-		console.log('Setting MAX_PROGRESS to', MAX_PROGRESS);
-		for (let i = 0; i < MAX_PROGRESS; i++) {
-			downloadNext();
-		}
-	}*/
-
+function printStats() {
 	console.log('Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
-
-
 }
-scanMaxProc(true);
-process.on('SIGUSR2', () => scanMaxProc(true));
-let scanInterval = setInterval(() => scanMaxProc(false), 10000);
+printStats();
+let scanInterval = setInterval(printStats, 10000);
 
 function checkEnd() {
 	if (queue.length === 0 && esDone && scanInterval !== undefined) {
@@ -40,7 +28,7 @@ function checkEnd() {
 
 function addURL(item) {
 	const file = {
-		dest: '/mnt/hdd/dumps/e621/' + item._source.file_url.replace('https://', ''),
+		dest: '/mnt/hdd/' + item._source.file_url.replace('https://', ''),
 		url: item._source.file_url,
 		size: item._source.file_size,
 		id: item._id,
