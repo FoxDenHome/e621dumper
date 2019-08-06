@@ -6,6 +6,8 @@ const { Client } = require('@elastic/elasticsearch');
 const request = require('request-promise');
 const fs = require('fs');
 
+const MAX_ID_PATH = `${__dirname}/e621.maxid`;
+
 const tMap = ['general', 'artist', 'unknown', 'copyright', 'character', 'species'];
 
 const client = new Client(config.elasticsearch);
@@ -95,8 +97,6 @@ async function getPage(beforeId) {
 		maxId,
 	};
 }
-
-const MAX_ID_PATH = './e621.maxid';
 
 async function main() {
 	let maxId = -1;
