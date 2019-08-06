@@ -48,7 +48,7 @@ function addURL(item) {
 		deleted: item._source[DELETED_KEY],
 	};
 
-	if (file.url === 'https://static1.e621.net/images/download-preview.png') {
+	if (file.url === 'https://static1.e621.net/images/download-preview.png' || !file.url) {
 		inProgress++;
 		downloadDone(file, RES_SKIP);
 		return;
