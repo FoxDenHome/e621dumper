@@ -26,6 +26,8 @@ function checkEnd() {
 	}
 }
 
+const RES_SKIP = 'skipped';
+
 function addURL(item) {
 	const file = {
 		dest: '/mnt/hdd/files/' + item._source.file_url.replace('https://', ''),
@@ -42,7 +44,7 @@ function addURL(item) {
 		}
 		if (stat && stat.size === file.size) {
 			inProgress++;
-			downloadDone(file, true);
+			downloadDone(file, RES_SKIP);
 			return;
 		}
 		queue.push(file);
@@ -51,7 +53,9 @@ function addURL(item) {
 }
 
 function downloadDone(file, success, fileDeleted) {
-	if (success) {
+	if (success === RES_SKIP) {
+		skippedCount++;
+	} else if (success) {
 		successCount++;
 	} else {
 		errorCount++;
