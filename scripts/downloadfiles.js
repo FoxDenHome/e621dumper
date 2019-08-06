@@ -15,7 +15,7 @@ let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCoun
 const agent = new https.Agent({ keepAlive: true });
 
 const DOWNLOAD_KIND = process.argv[2] || 'file';
-const DEST_FOLDER = '/mnt/hdd/files/';
+const DEST_FOLDER = config.rootdir;
 
 const RECHECK_ALL = process.argv[3] === 'force';
 
