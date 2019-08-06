@@ -46,6 +46,12 @@ function addURL(item) {
 		deleted: item._source[DELETED_KEY],
 	};
 
+	if (file.url === 'https://static1.e621.net/images/download-preview.png') {
+		inProgress++;
+		downloadDone(file, RES_SKIP);
+		return;
+	}
+
 	fs.stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
 			return;
