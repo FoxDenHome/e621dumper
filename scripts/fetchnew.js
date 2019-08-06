@@ -1,5 +1,7 @@
 'use strict';
 
+const config = require('./config.js');
+
 const { Client } = require('@elastic/elasticsearch');
 const request = require('request-promise');
 const fs = require('fs');
