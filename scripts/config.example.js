@@ -6,4 +6,5 @@ module.exports = {
 		sniffOnStart: true,
 	},
 	rootdir: '/mnt/hdd/files/',
+	maxParallel: 16,
 };

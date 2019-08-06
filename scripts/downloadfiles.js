@@ -22,7 +22,7 @@ const URL_KEY = `${DOWNLOAD_KIND}_url`;
 const SIZE_KEY = `${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
-let MAX_PROGRESS = 64;
+let MAX_PROGRESS = config.maxParallel;
 let esDone = false;
 
 function setHadErrors() {
