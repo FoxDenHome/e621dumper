@@ -6,12 +6,7 @@ const fs = require('fs');
 
 const tMap = ['general', 'artist', 'unknown', 'copyright', 'character', 'species'];
 
-const client = new Client({
-	node: 'http://localhost:9200',
-	maxRetries: 5,
-	requestTimeout: 60000,
-	sniffOnStart: true,
-});
+const client = new Client(config.elasticsearch);
 
 function fixArray(a, s) {
 	if (a) {

@@ -42,29 +42,32 @@ function checkEnd() {
 
 const RES_SKIP = 'skipped';
 
+const gotUrls = new Set();
+
 function addURL(item) {
 	const file = {
 		url: item._source[URL_KEY],
-		size: item._source[SIZE_KEY],
+		size: item._source[SIZE_KEY] || 0,
 		id: item._id,
 		downloaded: item._source[DOWNLOADED_KEY],
 		deleted: item._source[DELETED_KEY],
 	};
 
-	if (file.url === 'https://static1.e621.net/images/download-preview.png' || !file.url) {
+	if (!file.url || gotUrls.has(file.url)) {
 		inProgress++;
 		downloadDone(file, RES_SKIP);
 		return;
 	}
+	gotUrls.add(file.url);
 
-	file.dest = DEST_FOLDER + file.url.replace('https://', '');
+	file.dest = DEST_FOLDER + file.url.replace(/^https?:\/\//, '');
 
 	fs.stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
 			console.error(err);
 			return;
 		}
-		if (stat && (stat.size === file.size || !file.size || file.size <= 0)) {
+		if (stat && (stat.size === file.size || file.size <= 0)) {
 			inProgress++;
 			downloadDone(file, RES_SKIP);
 			return;
@@ -145,10 +148,11 @@ function downloadNext() {
 		}
 		res.pipe(out);
 		out.on('finish', () => {
-			if (!file.size || file.size <= 0) {
+			if (file.size <= 0) {
 				downloadDone(file, true);
 				return;
 			}
+
 			fs.stat(file.dest, (err, stat) => {
 				const success = !err && stat && stat.size === file.size;
 				if (!success) {
@@ -164,12 +168,7 @@ function downloadNext() {
 	}).end();
 }
 
-const client = new Client({
-	node: 'http://localhost:9200',
-	maxRetries: 5,
-	requestTimeout: 60000,
-	sniffOnStart: true
-});
+const client = new Client(config.elasticsearch);
 
 const mustNot = [
 	{ term: { [DELETED_KEY]: true } },
