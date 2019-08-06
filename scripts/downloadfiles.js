@@ -40,7 +40,6 @@ const RES_SKIP = 'skipped';
 
 function addURL(item) {
 	const file = {
-		dest: DEST_FOLDER + item._source[URL_KEY].replace('https://', ''),
 		url: item._source[URL_KEY],
 		size: item._source[SIZE_KEY],
 		id: item._id,
@@ -53,6 +52,8 @@ function addURL(item) {
 		downloadDone(file, RES_SKIP);
 		return;
 	}
+
+	file.dest = DEST_FOLDER + file.url.replace('https://', '');
 
 	fs.stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
