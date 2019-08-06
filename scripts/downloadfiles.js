@@ -23,6 +23,10 @@ let inProgress = 0;
 let MAX_PROGRESS = 64;
 let esDone = false;
 
+function setHadErrors() {
+	process.exitCode = 1;
+}
+
 function printStats() {
 	console.log('Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
 }
@@ -109,6 +113,7 @@ function downloadDone(file, success, fileDeleted) {
 			return;
 		}
 		console.error(err);
+		setHadErrors();
 	});
 
 }
@@ -135,6 +140,7 @@ function downloadNext() {
 		if (res.statusCode !== 200) {
 			downloadDone(file, false);
 			console.error('Bad status code ', res.statusCode, ' on ', file.url);
+			setHadErrors();
 			return;
 		}
 		res.pipe(out);
@@ -144,12 +150,17 @@ function downloadNext() {
 				return;
 			}
 			fs.stat(file.dest, (err, stat) => {
-				downloadDone(file, !err && stat && stat.size === file.size);
+				const success = !err && stat && stat.size === file.size;
+				if (!success) {
+					setHadErrors();
+				}
+				downloadDone(file, success);
 			});
 		});
 	}).on('error', (e) => {
 		downloadDone(file, false);
 		console.error('Error ', e, ' on ', file.url);
+		setHadErrors();
 	}).end();
 }
 
@@ -183,7 +194,10 @@ client.search({
 }, function getMoreUntilDone(error, response) {
 	if (error) {
 		console.error(error.meta.body.error);
+		setHadErrors();
+		return;
 	}
+
 	// collect all the records
 	response.body.hits.hits.forEach(function (hit) {
 		foundCount++;
