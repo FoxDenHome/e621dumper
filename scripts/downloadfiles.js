@@ -28,7 +28,7 @@ function checkEnd() {
 
 function addURL(item) {
 	const file = {
-		dest: '/mnt/hdd/' + item._source.file_url.replace('https://', ''),
+		dest: '/mnt/hdd/files/' + item._source.file_url.replace('https://', ''),
 		url: item._source.file_url,
 		size: item._source.file_size,
 		id: item._id,
