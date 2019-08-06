@@ -56,6 +56,7 @@ function addURL(item) {
 
 	fs.stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
+			console.error(err);
 			return;
 		}
 		if (stat && (stat.size === file.size || !file.size || file.size <= 0)) {
