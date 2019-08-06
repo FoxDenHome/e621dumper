@@ -9,8 +9,16 @@ let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCoun
 
 const agent = new https.Agent({ keepAlive: true });
 
+const DOWNLOAD_KIND = process.argv[2] || 'file';
+const DEST_FOLDER = `/mnt/hdd/${DOWNLOADED_KIND}/`;
+
+const DOWNLOADED_KEY = `${DOWNLOADED_KIND}_downloaded`;
+const DELETED_KEY = `${DOWNLOADED_KIND}_deleted`;
+const URL_KEY = `${DOWNLOADED_KIND}_url`;
+const SIZE_KEY = `${DOWNLOADED_KIND}_size`;
+
 let inProgress = 0;
-let MAX_PROGRESS = 16;
+let MAX_PROGRESS = 64;
 let esDone = false;
 
 function printStats() {
@@ -30,12 +38,12 @@ const RES_SKIP = 'skipped';
 
 function addURL(item) {
 	const file = {
-		dest: '/mnt/hdd/files/' + item._source.file_url.replace('https://', ''),
-		url: item._source.file_url,
-		size: item._source.file_size,
+		dest: DEST_FOLDER + item._source[URL_KEY].replace('https://', ''),
+		url: item._source[URL_KEY],
+		size: item._source[SIZE_KEY],
 		id: item._id,
-		file_downloaded: item._source.file_downloaded,
-		file_deleted: item._source.file_deleted,
+		downloaded: item._source[DOWNLOADED_KEY],
+		deleted: item._source[DELETED_KEY],
 	};
 
 	fs.stat(file.dest, (err, stat) => {
@@ -67,15 +75,15 @@ function downloadDone(file, success, fileDeleted) {
 
 	const docBody = {};
 	if (success) {
-		if (file.file_downloaded) {
+		if (file.downloaded) {
 			return;
 		}
-		docBody.file_downloaded = true;
+		docBody[DOWNLOADED_KEY] = true;
 	} else if (fileDeleted) {
-		if (file.file_deleted) {
+		if (file.deleted) {
 			return;
 		}
-		docBody.file_deleted = true;
+		docBody[DELETED_KEY] = true;
 	} else {
 		return;
 	}
@@ -143,8 +151,8 @@ client.search({
 		query: {
 			bool: {
 				must_not: [
-					{ term: { file_deleted: true } },
-					{ term: { file_downloaded: true } },
+					{ term: { [DELETED_KEY]: true } },
+					{ term: { [DOWNLOADED_KEY]: true } },
 				],
 			},
 		},
