@@ -58,7 +58,7 @@ function addURL(item) {
 		if (err && err.code !== 'ENOENT') {
 			return;
 		}
-		if (stat && stat.size === file.size) {
+		if (stat && (stat.size === file.size || !file.size || file.size <= 0)) {
 			inProgress++;
 			downloadDone(file, RES_SKIP);
 			return;
@@ -136,7 +136,15 @@ function downloadNext() {
 			return;
 		}
 		res.pipe(out);
-		out.on('finish', () => downloadDone(file, true));
+		out.on('finish', () => {
+			if (!file.size || file.size <= 0) {
+				downloadDone(file, true);
+				return;
+			}
+			fs.stat(file.dest, (err, stat) => {
+				downloadDone(file, !err && stat && stat.size === file.size);
+			});
+		});
 	}).on('error', (e) => {
 		downloadDone(file, false);
 		console.error('Error ', e, ' on ', file.url);
