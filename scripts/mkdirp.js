@@ -19,12 +19,16 @@ function mkdirp(dir) {
 	try {
 		mkdirSync(dir);
 	} catch (e) {
-		if (e.code === 'ENOENT') {
-			mkdirp(dirname(dir));
-			mkdirSync(dir);
-			return;
+		switch (e.code) {
+			case 'ENOENT':
+				mkdirp(dirname(dir));
+				mkdirSync(dir);
+				break;
+			case 'EEXIST':
+				break;
+			default:
+				throw e;
 		}
-		throw e;
 	}
 
 	madeDirs.add(dir);
