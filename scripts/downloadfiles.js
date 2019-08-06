@@ -176,6 +176,7 @@ client.search({
 		query: {
 			bool: {
 				must_not: mustNot,
+				must: { exists: { field: URL_KEY } },
 			},
 		},
 	},
