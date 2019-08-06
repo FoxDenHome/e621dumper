@@ -32,6 +32,8 @@ function addURL(item) {
 		url: item._source.file_url,
 		size: item._source.file_size,
 		id: item._id,
+		file_downloaded: item._source.file_downloaded,
+		file_deleted: item._source.file_deleted,
 	};
 
 	fs.stat(file.dest, (err, stat) => {
@@ -61,8 +63,14 @@ function downloadDone(file, success, fileDeleted) {
 
 	const docBody = {};
 	if (success) {
+		if (file.file_downloaded) {
+			return;
+		}
 		docBody.file_downloaded = true;
 	} else if (fileDeleted) {
+		if (file.file_deleted) {
+			return;
+		}
 		docBody.file_deleted = true;
 	} else {
 		return;
