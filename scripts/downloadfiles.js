@@ -12,6 +12,8 @@ const agent = new https.Agent({ keepAlive: true });
 const DOWNLOAD_KIND = process.argv[2] || 'file';
 const DEST_FOLDER = '/mnt/hdd/files/';
 
+const RECHECK_ALL = process.argv[3] === 'force';
+
 const DOWNLOADED_KEY = `${DOWNLOAD_KIND}_downloaded`;
 const DELETED_KEY = `${DOWNLOAD_KIND}_deleted`;
 const URL_KEY = `${DOWNLOAD_KIND}_url`;
@@ -148,6 +150,13 @@ const client = new Client({
 	sniffOnStart: true
 });
 
+const mustNot = [
+	{ term: { [DELETED_KEY]: true } },
+];
+
+if (!RECHECK_ALL) {
+	mustNot.push({ term: { [DOWNLOADED_KEY]: true } });
+}
 
 client.search({
 	index: 'e621posts',
@@ -156,10 +165,7 @@ client.search({
 		size: 100,
 		query: {
 			bool: {
-				must_not: [
-					{ term: { [DELETED_KEY]: true } },
-					{ term: { [DOWNLOADED_KEY]: true } },
-				],
+				must_not: mustNot,
 			},
 		},
 	},
