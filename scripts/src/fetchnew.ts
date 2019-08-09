@@ -1,16 +1,34 @@
 import { Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
+import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap, PostDate } from './types';
 
 const config = require('../config.json');
-
 const MAX_ID_PATH = `${__dirname}/e621.maxid`;
-
-const tMap = ['general', 'artist', 'unknown', 'copyright', 'character', 'species'];
-
 const client = new Client(config.elasticsearch);
 
-function fixArray(a: string[] | string, s: string) {
+interface PostPage {
+	items: ESPost[];
+	minId: number;
+	maxId: number;
+}
+
+interface ESBulkOperation {
+	update: {
+		_id: string;
+		_index: 'e621posts';
+		retry_on_conflict: number;
+	};
+}
+
+interface ESPostDoc {
+	doc_as_upsert: true;
+	doc: ESPost;
+}
+
+type ESQueueEntry = ESPostDoc | ESBulkOperation;
+
+function fixArray(a?: string[] | string, s: string = ' ') {
 	if (a) {
 		if (typeof a === 'string') {
 			a = a.split(s);
@@ -20,36 +38,36 @@ function fixArray(a: string[] | string, s: string) {
 	return [];
 }
 
-function fixTags(v: any, name: string) {
+function fixTags(v: ESPost | APIPost, name: TagClass) {
 	const a = v[name];
 	v[name] = [];
-	for (const typ of tMap) {
-		v[`${name}_${typ}`] = [];
+	for (const typ of tagTypeMap) {
+		(v as any)[`${name}_${typ}`] = [];
 	}
 	if (!a) {
 		return;
 	}
 
-	if (isFinite(a.length)) {
-		v[name] = fixArray(a, ' ');
+	if ((a as string[] | string).length) {
+		v[name] = fixArray(<string[] | string>a, ' ');
 		return;
 	}
 
-	for (const typ of Object.keys(a)) {
-		fixTagsSub(a[typ], v, `${name}_${typ}`, name);
+	for (const typ of <TagType[]>Object.keys(a)) {
+		fixTagsSub((a as APINestedTags)[typ]!, v, `${name}_${typ}`, name);
 	}
 }
 
-function fixTagsSub(a: string | string[], v: any, name: string, gname: string) {
+function fixTagsSub(a: string[], v: APIPost | ESPost, name: string, gname: TagClass) {
 	a = fixArray(a, ' ');
 
 	for(const t of a) {
-		v[name].push(t);
-		v[gname].push(t);
+		((v as any)[name] as string[]).push(t);
+		(v[gname] as string[]).push(t);
 	}
 }
 
-function normalizer(v: any) {
+function normalizer(v: APIPost | ESPost): ESPost {
 	// Uniq sources
 	const s = v.sources || [];
 	if (v.source) {
@@ -66,17 +84,18 @@ function normalizer(v: any) {
 	v.children = fixArray(v.children, ',');
 
 	// Fix date
-	v.created_at = new Date((v.created_at.s * 1000) + (v.created_at.n / 1000000)).toISOString();
+	const d = v.created_at as PostDate;
+	v.created_at = new Date((d.s * 1000) + (d.n / 1000000)).toISOString();
 
-	return v;
+	return v as ESPost;
 }
 
-async function getPage(beforeId: number) {
+async function getPage(beforeId?: number): Promise<PostPage> {
 	const res = await request('https://e621.net/post/index.json?limit=320&typed_tags=1' + (beforeId ? `&before_id=${beforeId}` : ''), {
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
 	});
 	const body = JSON.parse(res);
-	const items = body.map((v: any) => normalizer(v));
+	const items = body.map((v: APIPost) => normalizer(v));
 
 	let minId = items[0].id, maxId = items[0].id;
 	for (const item of items) {
@@ -125,9 +144,9 @@ async function main() {
 	let beforeId = undefined;
 	while (true) {
 		console.log(`Asking with beforeId = ${beforeId}`);
-		const data: any = await getPage(beforeId);
+		const data: PostPage = await getPage(beforeId);
 
-		const pageQueue: any[] = [];
+		const pageQueue: ESQueueEntry[] = [];
 
 		if (data.maxId > _maxId) {
 			_maxId = data.maxId;
@@ -136,7 +155,7 @@ async function main() {
 		for (const item of data.items) {
 			pageQueue.push({
 				update: {
-					_id: item.id,
+					_id: item.id.toString(10),
 					_index : 'e621posts',
 					retry_on_conflict: 3,
 				},

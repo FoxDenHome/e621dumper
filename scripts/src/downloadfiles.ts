@@ -2,6 +2,7 @@ import { Client } from '@elastic/elasticsearch';
 import { Agent, request } from 'https';
 import { mkdirpFor, pathFixer } from './utils';
 import { stat, createWriteStream } from 'fs';
+import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from './types';
 
 const config = require('../config.json');
 
@@ -24,13 +25,13 @@ const DEST_FOLDER = config.rootdir;
 
 const RECHECK_ALL = process.argv[3] === 'force';
 
-const DOWNLOADED_KEY = `${DOWNLOAD_KIND}_downloaded`;
-const DELETED_KEY = `${DOWNLOAD_KIND}_deleted`;
-const URL_KEY = `${DOWNLOAD_KIND}_url`;
-const SIZE_KEY = `${DOWNLOAD_KIND}_size`;
+const DOWNLOADED_KEY: FileDownloadedKeys = <FileDownloadedKeys>`${DOWNLOAD_KIND}_downloaded`;
+const DELETED_KEY: FileDeletedKeys = <FileDeletedKeys>`${DOWNLOAD_KIND}_deleted`;
+const URL_KEY: FileURLKeys = <FileURLKeys>`${DOWNLOAD_KIND}_url`;
+const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
-let MAX_PROGRESS = config.maxParallel;
+let MAX_PARALLEL = config.maxParallel;
 let esDone = false;
 
 const client = new Client(config.elasticsearch);
@@ -64,7 +65,7 @@ function checkEnd() {
 	}
 }
 
-function addURL(item: any) {
+function addURL(item: ESItem) {
 	const file: QueueEntry = {
 		url: item._source[URL_KEY],
 		size: item._source[SIZE_KEY] || 0,
@@ -99,7 +100,7 @@ function addURL(item: any) {
 	});
 }
 
-function downloadDone(file: QueueEntry, success: boolean | string, fileDeleted = false) {
+function downloadDone(file: QueueEntry, success: boolean | 'skipped', fileDeleted = false) {
 	if (success === RES_SKIP) {
 		skippedCount++;
 	} else if (success) {
@@ -112,7 +113,7 @@ function downloadDone(file: QueueEntry, success: boolean | string, fileDeleted =
 
 	downloadNext();
 
-	const docBody: any = {};
+	const docBody: Partial<ESPost> = {};
 	if (success) {
 		if (file.downloaded) {
 			return;
@@ -146,7 +147,7 @@ function downloadDone(file: QueueEntry, success: boolean | string, fileDeleted =
 function downloadNext() {
 	checkEnd();
 
-	if (inProgress >= MAX_PROGRESS) {
+	if (inProgress >= MAX_PARALLEL) {
 		return;
 	}
 
@@ -210,7 +211,7 @@ client.search({
 	}
 
 	// collect all the records
-	response.body.hits.hits.forEach((hit: any) => {
+	response.body.hits.hits.forEach((hit: ESItem) => {
 		foundCount++;
 		addURL(hit);
 	});
