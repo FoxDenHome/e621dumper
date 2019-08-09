@@ -2,7 +2,7 @@ import { Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
 
-const config = require('./config.js');
+const config = require('../config.json');
 
 const MAX_ID_PATH = `${__dirname}/e621.maxid`;
 

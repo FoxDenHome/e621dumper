@@ -3,7 +3,7 @@ import { Agent, request } from 'https';
 import { mkdirpFor, pathFixer } from './utils';
 import { stat, createWriteStream } from 'fs';
 
-const config = require('./config.json');
+const config = require('../config.json');
 
 interface QueueEntry {
 	url: string,
