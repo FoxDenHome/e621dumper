@@ -1,4 +1,4 @@
-import { Client } from '@elastic/elasticsearch';
+import { RequestParams, Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
 
@@ -127,20 +127,29 @@ async function main() {
 		console.log(`Asking with beforeId = ${beforeId}`);
 		const data: any = await getPage(beforeId);
 
+		const pageQueue: any[] = [];
+
 		if (data.maxId > _maxId) {
 			_maxId = data.maxId;
 		}
 
 		for (const item of data.items) {
-			await client.update({
-				index: 'e621posts',
-				id: item.id,
-				body: {
-					doc: item,
-					doc_as_upsert: true,
+			pageQueue.push({
+				update: {
+					_id: item.id,
+					_index : 'e621posts',
+					retry_on_conflict: 3,
 				},
 			});
+			pageQueue.push({
+				doc: item,
+				doc_as_upsert: true,
+			});
 		}
+
+		console.log(await client.bulk({
+			body: pageQueue,
+		}));
 
 		if (data.minId <= maxId) {
 			console.log('Done!');
