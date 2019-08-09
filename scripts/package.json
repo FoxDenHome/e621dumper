@@ -4,9 +4,18 @@
   "description": "e621 dumper scripts",
   "author": "Doridian",
   "license": "ISC",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "@elastic/elasticsearch": "^7.3.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^12.7.1",
+    "@types/request-promise": "^4.1.44",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
   }
 }

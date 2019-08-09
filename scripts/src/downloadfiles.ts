@@ -1,18 +1,23 @@
-'use strict';
+import { Client } from '@elastic/elasticsearch';
+import { Agent, request } from 'https';
+import { mkdirpFor, pathFixer } from './utils';
+import { stat, createWriteStream } from 'fs';
 
-const config = require('./config.js');
+const config = require('./config.json');
 
-const { Client } = require('@elastic/elasticsearch');
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const { mkdirpFor } = require('./mkdirp');
-const pathFixer = require('./pathFixer');
+interface QueueEntry {
+	url: string,
+	size: number,
+	id: string,
+	downloaded: boolean,
+	deleted: boolean,
+	dest: string,
+};
 
-const queue = [];
+const queue: QueueEntry[] = [];
 let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCount = 0, totalCount = 0;
 
-const agent = new https.Agent({ keepAlive: true });
+const agent = new Agent({ keepAlive: true });
 
 const DOWNLOAD_KIND = process.argv[2] || 'file';
 const DEST_FOLDER = config.rootdir;
@@ -28,6 +33,20 @@ let inProgress = 0;
 let MAX_PROGRESS = config.maxParallel;
 let esDone = false;
 
+const client = new Client(config.elasticsearch);
+
+const mustNot = [
+	{ term: { [DELETED_KEY]: true } },
+];
+
+const RES_SKIP = 'skipped';
+
+const gotUrls = new Set();
+
+if (!RECHECK_ALL) {
+	mustNot.push({ term: { [DOWNLOADED_KEY]: true } });
+}
+
 function setHadErrors() {
 	process.exitCode = 1;
 }
@@ -36,7 +55,7 @@ function printStats() {
 	console.log('Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
 }
 printStats();
-let scanInterval = setInterval(printStats, 10000);
+let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
 
 function checkEnd() {
 	if (queue.length === 0 && esDone && scanInterval !== undefined) {
@@ -45,17 +64,14 @@ function checkEnd() {
 	}
 }
 
-const RES_SKIP = 'skipped';
-
-const gotUrls = new Set();
-
-function addURL(item) {
-	const file = {
+function addURL(item: any) {
+	const file: QueueEntry = {
 		url: item._source[URL_KEY],
 		size: item._source[SIZE_KEY] || 0,
 		id: item._id,
 		downloaded: item._source[DOWNLOADED_KEY],
 		deleted: item._source[DELETED_KEY],
+		dest: '',
 	};
 
 	if (!file.url || gotUrls.has(file.url)) {
@@ -68,7 +84,7 @@ function addURL(item) {
 	file.dest = DEST_FOLDER + pathFixer(file.url.replace(/^https?:\/\//, ''));
 	mkdirpFor(file.dest);
 
-	fs.stat(file.dest, (err, stat) => {
+	stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
 			console.error(err);
 			return;
@@ -83,7 +99,7 @@ function addURL(item) {
 	});
 }
 
-function downloadDone(file, success, fileDeleted) {
+function downloadDone(file: QueueEntry, success: boolean | string, fileDeleted = false) {
 	if (success === RES_SKIP) {
 		skippedCount++;
 	} else if (success) {
@@ -96,7 +112,7 @@ function downloadDone(file, success, fileDeleted) {
 
 	downloadNext();
 
-	const docBody = {};
+	const docBody: any = {};
 	if (success) {
 		if (file.downloaded) {
 			return;
@@ -117,7 +133,7 @@ function downloadDone(file, success, fileDeleted) {
 		body: {
 			doc: docBody,
 		},
-	}, (err, res) => {
+	}, (err) => {
 		if (!err) {
 			return;
 		}
@@ -140,8 +156,8 @@ function downloadNext() {
 	}
 	inProgress++;
 
-	const out = fs.createWriteStream(file.dest);
-	https.request(file.url, { agent }, (res) => {
+	const out = createWriteStream(file.dest);
+	request(file.url, { agent }, (res) => {
 		if (res.statusCode === 404) {
 			downloadDone(file, false, true);
 			return;
@@ -159,7 +175,7 @@ function downloadNext() {
 				return;
 			}
 
-			fs.stat(file.dest, (err, stat) => {
+			stat(file.dest, (err, stat) => {
 				const success = !err && stat && stat.size === file.size;
 				if (!success) {
 					setHadErrors();
@@ -172,16 +188,6 @@ function downloadNext() {
 		console.error('Error ', e, ' on ', file.url);
 		setHadErrors();
 	}).end();
-}
-
-const client = new Client(config.elasticsearch);
-
-const mustNot = [
-	{ term: { [DELETED_KEY]: true } },
-];
-
-if (!RECHECK_ALL) {
-	mustNot.push({ term: { [DOWNLOADED_KEY]: true } });
 }
 
 client.search({
@@ -198,13 +204,13 @@ client.search({
 	},
 }, function getMoreUntilDone(error, response) {
 	if (error) {
-		console.error(error.meta.body.error);
+		console.error(error);
 		setHadErrors();
 		return;
 	}
 
 	// collect all the records
-	response.body.hits.hits.forEach(function (hit) {
+	response.body.hits.hits.forEach((hit: any) => {
 		foundCount++;
 		addURL(hit);
 	});
@@ -213,7 +219,7 @@ client.search({
 
 	if (response.body.hits.total.value !== foundCount) {
 		client.scroll({
-			scrollId: response.body._scroll_id,
+			scroll_id: response.body._scroll_id,
 			scroll: '10s',
 		}, getMoreUntilDone);
 	} else {

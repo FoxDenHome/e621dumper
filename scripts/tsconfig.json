@@ -1,0 +1,30 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "commonjs",
+        "lib": [
+            "es2019",
+        ],
+        "outDir": "dist",
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "experimentalDecorators": true,
+        "noErrorTruncation": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "skipLibCheck": true,
+        "types": [
+        ]
+    },
+    "include": [
+        "."
+    ]
+}

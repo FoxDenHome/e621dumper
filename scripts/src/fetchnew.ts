@@ -1,10 +1,8 @@
-'use strict';
+import { Client } from '@elastic/elasticsearch';
+import * as request from 'request-promise';
+import { readFileSync, writeFileSync } from 'fs';
 
 const config = require('./config.js');
-
-const { Client } = require('@elastic/elasticsearch');
-const request = require('request-promise');
-const fs = require('fs');
 
 const MAX_ID_PATH = `${__dirname}/e621.maxid`;
 
@@ -12,7 +10,7 @@ const tMap = ['general', 'artist', 'unknown', 'copyright', 'character', 'species
 
 const client = new Client(config.elasticsearch);
 
-function fixArray(a, s) {
+function fixArray(a: string[] | string, s: string) {
 	if (a) {
 		if (typeof a === 'string') {
 			a = a.split(s);
@@ -22,7 +20,7 @@ function fixArray(a, s) {
 	return [];
 }
 
-function fixTags(v, name) {
+function fixTags(v: any, name: string) {
 	const a = v[name];
 	v[name] = [];
 	for (const typ of tMap) {
@@ -42,7 +40,7 @@ function fixTags(v, name) {
 	}
 }
 
-function fixTagsSub(a, v, name, gname) {
+function fixTagsSub(a: string | string[], v: any, name: string, gname: string) {
 	a = fixArray(a, ' ');
 
 	for(const t of a) {
@@ -51,7 +49,7 @@ function fixTagsSub(a, v, name, gname) {
 	}
 }
 
-function normalizer(v) {
+function normalizer(v: any) {
 	// Uniq sources
 	const s = v.sources || [];
 	if (v.source) {
@@ -73,12 +71,12 @@ function normalizer(v) {
 	return v;
 }
 
-async function getPage(beforeId) {
+async function getPage(beforeId: number) {
 	const res = await request('https://e621.net/post/index.json?limit=320&typed_tags=1' + (beforeId ? `&before_id=${beforeId}` : ''), {
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
 	});
 	const body = JSON.parse(res);
-	const items = body.map(v => normalizer(v));
+	const items = body.map((v: any) => normalizer(v));
 
 	let minId = items[0].id, maxId = items[0].id;
 	for (const item of items) {
@@ -101,7 +99,7 @@ async function getPage(beforeId) {
 async function main() {
 	let maxId = -1;
 	try {
-		maxId = parseInt(fs.readFileSync(MAX_ID_PATH));
+		maxId = parseInt(readFileSync(MAX_ID_PATH).toString('utf8'));
 	} catch { }
 
 	if (maxId <= 0) {
@@ -127,7 +125,7 @@ async function main() {
 	let beforeId = undefined;
 	while (true) {
 		console.log(`Asking with beforeId = ${beforeId}`);
-		const data = await getPage(beforeId);
+		const data: any = await getPage(beforeId);
 
 		if (data.maxId > _maxId) {
 			_maxId = data.maxId;
@@ -151,7 +149,7 @@ async function main() {
 		beforeId = data.minId;
 	}
 
-	fs.writeFileSync(MAX_ID_PATH, _maxId);
+	writeFileSync(MAX_ID_PATH, _maxId);
 }
 
 async function safeMain() {

@@ -1,15 +1,13 @@
-'use strict';
-
 const { mkdirSync } = require('fs');
 const { normalize, dirname } = require('path');
 
 const madeDirs = new Set();
 
-function mkdirpFor(file) {
+export function mkdirpFor(file: string) {
 	return mkdirp(dirname(file));
 }
 
-function mkdirp(dir) {
+export function mkdirp(dir: string) {
 	dir = normalize(dir);
 
 	if (madeDirs.has(dir)) {
@@ -34,4 +32,10 @@ function mkdirp(dir) {
 	madeDirs.add(dir);
 }
 
-module.exports = { mkdirp, mkdirpFor };
+export function pathFixer(path: string) {
+	path = normalize(path);
+	if (path.startsWith('.') || path.startsWith('/')) {
+		path = '_' + path;
+	}
+	return path;
+}
