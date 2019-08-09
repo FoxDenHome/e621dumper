@@ -1,4 +1,4 @@
-import { RequestParams, Client } from '@elastic/elasticsearch';
+import { Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
 
@@ -147,9 +147,13 @@ async function main() {
 			});
 		}
 
-		console.log(await client.bulk({
+		const result = await client.bulk({
 			body: pageQueue,
-		}));
+		});
+
+		if (result.body.errors) {
+			throw new Error(result.body);
+		}
 
 		if (data.minId <= maxId) {
 			console.log('Done!');
