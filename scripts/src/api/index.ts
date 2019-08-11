@@ -54,4 +54,4 @@ app.post('/api/v1/posts', async (req: express.Request, res: express.Response) =>
     res.send(await processSearch(query, req));
 });
 
-app.listen(8001);
+app.listen(8001, () => console.log('e621dumper API online'));
