@@ -41,7 +41,7 @@ function addNegatableTerms(query: any, field: string, terms: string[]) {
     addTerms(query, field, negTerms, 'must_not');
 }
 
-app.get('/api/v1/posts', async (req, res) => {
+app.get('/api/v1/posts', async (req: express.Request, res: express.Response) => {
     const query = {};
     if (req.query.tags) {
         addNegatableTerms(query, 'tags', req.query.tags.split(' '));
@@ -49,7 +49,7 @@ app.get('/api/v1/posts', async (req, res) => {
     res.send(await processSearch(query, req));
 });
 
-app.post('/api/v1/posts', async (req, res) => {
+app.post('/api/v1/posts', async (req: express.Request, res: express.Response) => {
     const query = JSON.parse(req.body);
     res.send(await processSearch(query, req));
 });
