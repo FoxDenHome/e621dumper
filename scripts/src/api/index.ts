@@ -10,7 +10,7 @@ const client = new Client(config.elasticsearch);
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
-        url.pathname = `${url.host}/files/${url.pathname}`;
+        url.pathname = `/files/${url.host}${url.pathname}`;
         url.host = req.host;
         url.protocol = req.protocol;
         container[field] = url.href;
