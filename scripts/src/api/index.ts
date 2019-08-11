@@ -7,20 +7,21 @@ const config = require('../../config.json');
 const app = express();
 const client = new Client(config.elasticsearch);
 
-function filterURL(container: any, field: string) {
+function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
-        url.pathname = `${url.host}/${url.pathname}`;
-        url.host = 'e621.foxden.network';
+        url.pathname = `${url.host}/files/${url.pathname}`;
+        url.host = req.host;
+        url.protocol = req.protocol;
         container[field] = url.href;
     }
 }
 
-function filterESHit(hit: any): any {
+function filterESHit(hit: any, req: express.Request): any {
     const source = hit._source;
-    filterURL(source, 'file_url');
-    filterURL(source, 'sample_url');
-    filterURL(source, 'preview_url');
+    filterURL(source, 'file_url', req);
+    filterURL(source, 'sample_url', req);
+    filterURL(source, 'preview_url', req);
     return source;
 }
 
@@ -39,7 +40,7 @@ async function processSearch(query: any, req: express.Request) {
         },
     });
 
-    return res.body.hits.hits.map(filterESHit);
+    return res.body.hits.hits.map((hit: any) => filterESHit(hit, req));
 }
 
 function addTerms(query: any, field: string, terms: string[], typ = 'must') {
