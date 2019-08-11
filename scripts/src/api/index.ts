@@ -11,7 +11,7 @@ function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
         url.pathname = `/files/${url.host}${url.pathname}`;
-        url.host = req.host;
+        url.host = req.hostname;
         url.protocol = req.protocol;
         container[field] = url.href;
     }
