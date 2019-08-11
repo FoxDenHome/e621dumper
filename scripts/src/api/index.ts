@@ -21,12 +21,7 @@ async function processSearch(query: any, req: express.Request) {
         },
     });
 
-    const body = {
-        total: res.body.hits.total,
-        posts: res.body.hits.hits.map((hit: any) => hit._source),
-    };
-
-    return body;
+    return res.body.hits.hits.map((hit: any) => hit._source);
 }
 
 function addTerms(query: any, field: string, terms: string[], typ = 'must') {
