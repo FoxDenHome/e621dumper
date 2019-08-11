@@ -13,13 +13,20 @@ async function processSearch(query: any, req: express.Request) {
         query.match_all = {};
     }
 
-    return (await client.search({
+    const res = await client.search({
         index: 'e621posts',
         body: {
             size,
             query,
         },
-    })).body.hits;
+    });
+
+    const body = {
+        total: res.body.hits.total,
+        posts: res.body.hits.hits.map((hit: any) => hit._source),
+    };
+
+    return body;
 }
 
 function addTerms(query: any, field: string, terms: string[], typ = 'must') {
