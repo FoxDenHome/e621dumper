@@ -9,6 +9,10 @@ const client = new Client(config.elasticsearch);
 async function processSearch(query: any, req: express.Request) {
     const size = parseInt(req.query.limit, 10) || 100;
 
+    if (Object.keys(query).length < 1) {
+        query.match_all = {};
+    }
+
     return await client.search({
         index: 'e621posts',
         body: {
