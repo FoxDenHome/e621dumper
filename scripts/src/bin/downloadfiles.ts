@@ -1,10 +1,10 @@
 import { Client } from '@elastic/elasticsearch';
 import { Agent, request } from 'https';
-import { mkdirpFor, pathFixer } from './utils';
+import { mkdirpFor, pathFixer } from '../lib/utils';
 import { stat, createWriteStream } from 'fs';
-import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from './types';
+import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 
-const config = require('../config.json');
+const config = require('../../config.json');
 
 interface QueueEntry {
 	url: string,
@@ -24,6 +24,7 @@ const DOWNLOAD_KIND = process.argv[2] || 'file';
 const DEST_FOLDER = config.rootdir;
 
 const RECHECK_ALL = process.argv[3] === 'force';
+const EXIT_ERROR_IF_FOUND = process.argv[3] === 'error_if_found';
 
 const DOWNLOADED_KEY: FileDownloadedKeys = <FileDownloadedKeys>`${DOWNLOAD_KIND}_downloaded`;
 const DELETED_KEY: FileDeletedKeys = <FileDeletedKeys>`${DOWNLOAD_KIND}_deleted`;
@@ -212,6 +213,9 @@ client.search({
 
 	// collect all the records
 	response.body.hits.hits.forEach((hit: ESItem) => {
+		if (EXIT_ERROR_IF_FOUND) {
+			process.exitCode = 2;
+		}
 		foundCount++;
 		addURL(hit);
 	});

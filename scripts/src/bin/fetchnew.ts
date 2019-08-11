@@ -1,9 +1,9 @@
 import { Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
-import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap, PostDate } from './types';
+import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap, PostDate } from '../lib/types';
 
-const config = require('../config.json');
+const config = require('../../config.json');
 const MAX_ID_PATH = `${__dirname}/e621posts.maxid`;
 const client = new Client(config.elasticsearch);
 

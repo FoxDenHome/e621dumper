@@ -1,5 +1,5 @@
-const { mkdirSync } = require('fs');
-const { normalize, dirname } = require('path');
+import { mkdirSync } from 'fs';
+import { normalize, dirname } from 'path';
 
 const madeDirs = new Set();
 
