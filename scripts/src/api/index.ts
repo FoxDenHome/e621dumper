@@ -28,6 +28,9 @@ function addTerms(query: any, field: string, terms: string[], typ = 'must') {
     if (terms.length < 1) {
         return;
     }
+    if (!query.bool) {
+        query.bool = {};
+    }
     query.bool[typ].push({ terms: { [field]: terms } });
 }
 
