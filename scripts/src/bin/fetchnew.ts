@@ -95,6 +95,14 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
 	});
 	const body = JSON.parse(res);
+	if (body.length < 1) {
+		return {
+			items: [],
+			minId: 0,
+			maxId: 0,
+		};
+	}
+
 	const items = body.map((v: APIPost) => normalizer(v));
 
 	let minId = items[0].id, maxId = items[0].id;
@@ -145,6 +153,10 @@ async function main() {
 	while (true) {
 		console.log(`Asking with beforeId = ${beforeId}`);
 		const data: PostPage = await getPage(beforeId);
+		if (data.items.length < 1) {
+			console.log('Exhausted pages!');
+			break;
+		}
 
 		const pageQueue: ESQueueEntry[] = [];
 
