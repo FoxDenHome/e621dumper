@@ -8,14 +8,9 @@ export type FileDownloadedKeys = 'file_downloaded' | 'sample_downloaded' | 'prev
 export type FileDeletedKeys = 'file_deleted' | 'sample_deleted' | 'preview_deleted';
 export type FileSizeKeys = 'file_size' | 'sample_size' | 'preview_size';
 
-export interface APINestedTags {
-    general?: string[];
-    artist?: string[];
-    unknown?: string[];
-    copyright?: string[];
-    character?: string[];
-    species?: string[];
-}
+export type APINestedTags = {
+    [P in TagType]?: string[];
+};
 
 export interface PostDate {
     s: number;
@@ -24,19 +19,16 @@ export interface PostDate {
 
 type APITagsField = APINestedTags | string[] | string;
 
-export interface BasePost {
+export type BasePost = {
+    [P in FileURLKeys]?: string;
+} & {
+    [P in FileSizeKeys]?: number;
+} & {
     id: number;
     sources?: string[];
     source?: string;
     children?: string | string[];
-
-    file_url: string;
-    sample_url: string;
-    preview_url: string;
-    file_size: number;
-    sample_size?: number;
-    preview_size?: number;
-}
+};
 
 export interface APIPost extends BasePost {
     tags?: APITagsField;
@@ -45,7 +37,11 @@ export interface APIPost extends BasePost {
     created_at: PostDate;
 }
 
-export interface ESPost extends BasePost {
+export type ESPost = BasePost & {
+    [P in FileDownloadedKeys]: boolean;
+} & {
+    [P in FileDeletedKeys]: boolean;
+} & {
     tags: string[];
     locked_tags: string[];
 
@@ -64,13 +60,6 @@ export interface ESPost extends BasePost {
     locked_tags_species: string[];
 
     created_at: string;
-
-    file_downloaded: boolean;
-    sample_downloaded: boolean;
-    preview_downloaded: boolean;
-    file_deleted: boolean;
-    sample_deleted: boolean;
-    preview_deleted: boolean;
 }
 
 export interface ESItem {

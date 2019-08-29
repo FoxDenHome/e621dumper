@@ -7,7 +7,7 @@ import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileS
 const config = require('../../config.json');
 
 interface QueueEntry {
-	url: string,
+	url?: string,
 	size: number,
 	id: string,
 	downloaded: boolean,
@@ -159,7 +159,7 @@ function downloadNext() {
 	inProgress++;
 
 	const out = createWriteStream(file.dest);
-	request(file.url, { agent }, (res) => {
+	request(file.url!, { agent }, (res) => {
 		if (res.statusCode === 404) {
 			downloadDone(file, false, true);
 			return;
