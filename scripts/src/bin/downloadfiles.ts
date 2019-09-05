@@ -43,7 +43,7 @@ const mustNot = [
 
 const RES_SKIP = 'skipped';
 
-const gotUrls = new Set();
+const gotFiles = new Set();
 
 if (!RECHECK_ALL) {
 	mustNot.push({ term: { [DOWNLOADED_KEY]: true } });
@@ -67,23 +67,24 @@ function checkEnd() {
 }
 
 function addURL(item: ESItem) {
+	const url = item._source[URL_KEY];
+
 	const file: QueueEntry = {
-		url: item._source[URL_KEY],
+		url,
 		size: item._source[SIZE_KEY] || 0,
 		id: item._id,
 		downloaded: item._source[DOWNLOADED_KEY],
 		deleted: item._source[DELETED_KEY],
-		dest: '',
+		dest: url ? (DEST_FOLDER + pathFixer(url.replace(/^https?:\/\//, ''))) : '',
 	};
 
-	if (!file.url || gotUrls.has(file.url)) {
+	if (!file.dest || gotFiles.has(file.dest)) {
 		inProgress++;
 		downloadDone(file, RES_SKIP);
 		return;
 	}
-	gotUrls.add(file.url);
+	gotFiles.add(file.dest);
 
-	file.dest = DEST_FOLDER + pathFixer(file.url.replace(/^https?:\/\//, ''));
 	mkdirpFor(file.dest);
 
 	stat(file.dest, (err, stat) => {
