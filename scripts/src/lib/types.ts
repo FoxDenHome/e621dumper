@@ -15,6 +15,8 @@ export type APINestedTags = {
 export interface APIFileInfo {
     size: number;
     url: string;
+    height: number;
+    width: number;
 }
 
 type APITagsField = APINestedTags | string[] | string;

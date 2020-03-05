@@ -72,6 +72,8 @@ function fixFile(v: APIPost | ESPost, p: 'file' | 'sample' | 'preview') {
 	const ve = v as any;
 	ve[`${p}_url`] = va[p].url
 	ve[`${p}_size`] = va[p].size;
+	ve[`${p}_height`] = va[p].height;
+	ve[`${p}_width`] = va[p].width;
 	delete va[p];
 }
 
@@ -91,6 +93,9 @@ function normalizer(v: ESPost | APIPost): ESPost {
 	fixFile(v, 'file');
 	fixFile(v, 'sample');
 	fixFile(v, 'preview');
+
+	const va = v as any;
+	va.score = va.score.total;
 
 	// Fix arrays that are just strings...
 	v.children = fixArray(v.children, ',');
