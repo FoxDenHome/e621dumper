@@ -198,7 +198,7 @@ async function main() {
 		});
 
 		if (result.body.errors) {
-			throw new Error(result.body);
+			throw new Error(JSON.stringify(result.body));
 		}
 
 		if (data.minId <= maxId) {
