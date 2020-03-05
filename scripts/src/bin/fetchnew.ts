@@ -107,7 +107,7 @@ function normalizer(v: ESPost | APIPost): ESPost {
 }
 
 async function getPage(beforeId?: number): Promise<PostPage> {
-	const res = await request('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&before_id=${beforeId}` : ''), {
+	const res = await request('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&tags=id:<${beforeId}` : ''), {
 		auth: {
 			user: config.apiUser,
 			pass: config.apiKey,
