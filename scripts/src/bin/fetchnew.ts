@@ -147,7 +147,9 @@ async function main() {
 	let maxId = -1;
 	try {
 		maxId = parseInt(readFileSync(MAX_ID_PATH).toString('utf8').trim(), 10);
-	} catch { }
+	} catch (e) {
+		console.error('Error loading maxId file:', e.stack || e);
+	}
 
 	if (maxId <= 0) {
 		const maxIdRes = await client.search({
