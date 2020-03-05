@@ -115,6 +115,7 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
 	});
 	const body = JSON.parse(res).posts;
+	console.log(body.length);
 	if (body.length < 1) {
 		return {
 			items: [],
