@@ -12,18 +12,14 @@ export type APINestedTags = {
     [P in TagType]?: string[];
 };
 
-export interface PostDate {
-    s: number;
-    n: number;
+export interface APIFileInfo {
+    size: number;
+    url: string;
 }
 
 type APITagsField = APINestedTags | string[] | string;
 
 export type BasePost = {
-    [P in FileURLKeys]?: string;
-} & {
-    [P in FileSizeKeys]?: number;
-} & {
     id: number;
     sources?: string[];
     source?: string;
@@ -34,10 +30,18 @@ export interface APIPost extends BasePost {
     tags?: APITagsField;
     locked_tags?: APITagsField;
 
-    created_at: PostDate;
+    created_at: string;
+
+    file: APIFileInfo;
+    preview: APIFileInfo;
+    sample: APIFileInfo;
 }
 
 export type ESPost = BasePost & {
+    [P in FileURLKeys]?: string;
+} & {
+    [P in FileSizeKeys]?: number;
+} & {
     [P in FileDownloadedKeys]: boolean;
 } & {
     [P in FileDeletedKeys]: boolean;

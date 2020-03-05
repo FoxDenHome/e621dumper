@@ -1,7 +1,7 @@
 import { Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
-import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap, PostDate } from '../lib/types';
+import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '../lib/types';
 
 const config = require('../../config.json');
 const MAX_ID_PATH = `${__dirname}/e621posts.maxid`;
@@ -67,7 +67,15 @@ function fixTagsSub(a: string[], v: APIPost | ESPost, name: string, gname: TagCl
 	}
 }
 
-function normalizer(v: APIPost | ESPost): ESPost {
+function fixFile(v: APIPost | ESPost, p: 'file' | 'sample' | 'preview') {
+	const va = v as APIPost;
+	const ve = v as any;
+	ve[`${p}_url`] = va[p].url
+	ve[`${p}_size`] = va[p].size;
+	delete va[p];
+}
+
+function normalizer(v: ESPost | APIPost): ESPost {
 	// Uniq sources
 	const s = v.sources || [];
 	if (v.source) {
@@ -80,18 +88,25 @@ function normalizer(v: APIPost | ESPost): ESPost {
 	fixTags(v, 'tags');
 	fixTags(v, 'locked_tags');
 
+	fixFile(v, 'file');
+	fixFile(v, 'sample');
+	fixFile(v, 'preview');
+
 	// Fix arrays that are just strings...
 	v.children = fixArray(v.children, ',');
 
 	// Fix date
-	const d = v.created_at as PostDate;
-	v.created_at = new Date((d.s * 1000) + (d.n / 1000000)).toISOString();
+	v.created_at = new Date(v.created_at).toISOString();
 
 	return v as ESPost;
 }
 
 async function getPage(beforeId?: number): Promise<PostPage> {
-	const res = await request('https://e621.net/post/index.json?limit=320&typed_tags=1' + (beforeId ? `&before_id=${beforeId}` : ''), {
+	const res = await request('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&before_id=${beforeId}` : ''), {
+		auth: {
+			user: config.apiUser,
+			pass: config.apiKey,
+		},
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
 	});
 	const body = JSON.parse(res);

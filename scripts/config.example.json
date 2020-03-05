@@ -5,6 +5,8 @@
 		"requestTimeout": 60000,
 		"sniffOnStart": true
 	},
+	"apiUser": "",
+	"apiKey": "",
 	"rootdir": "/mnt/hdd/files/",
 	"maxParallel": 16
 }
