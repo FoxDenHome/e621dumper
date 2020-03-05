@@ -146,7 +146,7 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 async function main() {
 	let maxId = -1;
 	try {
-		maxId = parseInt(readFileSync(MAX_ID_PATH).toString('utf8'));
+		maxId = parseInt(readFileSync(MAX_ID_PATH).toString('utf8').trim(), 10);
 	} catch { }
 
 	if (maxId <= 0) {
