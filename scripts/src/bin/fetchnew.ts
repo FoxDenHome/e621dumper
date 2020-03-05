@@ -136,8 +136,6 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		}
 	}
 
-	console.log(minId, maxId);
-
 	return {
 		items,
 		minId,
