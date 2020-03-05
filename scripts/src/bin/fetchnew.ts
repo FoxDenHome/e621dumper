@@ -118,7 +118,7 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		};
 	}
 
-	const items = body.map((v: APIPost) => normalizer(v));
+	const items = body.posts.map((v: APIPost) => normalizer(v));
 
 	let minId = items[0].id, maxId = items[0].id;
 	for (const item of items) {
