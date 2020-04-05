@@ -61,8 +61,14 @@ function fixTags(v: ESPost | APIPost, name: TagClass) {
 function fixTagsSub(a: string[], v: APIPost | ESPost, name: string, gname: TagClass) {
 	a = fixArray(a, ' ');
 
+	const vany = (v as any);
+
+	if (!vany[name]) {
+		vany[name] = [];
+	}
+
 	for(const t of a) {
-		((v as any)[name] as string[]).push(t);
+		(vany[name] as string[]).push(t);
 		(v[gname] as string[]).push(t);
 	}
 }
