@@ -47,13 +47,19 @@ function addTerms(query: any, field: string, terms: string[], typ = 'must') {
     if (terms.length < 1) {
         return;
     }
+
     if (!query.bool) {
         query.bool = {};
     }
+
     if (!query.bool[typ]) {
         query.bool[typ] = [];
     }
-    query.bool[typ].push({ terms: { [field]: terms } });
+
+    const qtyp = query.bool[typ];
+    for (const term of terms) {
+        qtyp.push({ term: { [field]: term } });
+    }
 }
 
 function addNegatableTerms(query: any, field: string, terms: string[]) {
