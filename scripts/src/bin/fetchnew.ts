@@ -221,7 +221,7 @@ async function main() {
 		beforeId = data.minId;
 	}
 
-	writeFileSync(MAX_ID_PATH, _maxId);
+	writeFileSync(MAX_ID_PATH, _maxId.toString());
 }
 
 async function safeMain() {

@@ -26,7 +26,7 @@ function filterESHit(hit: any, req: express.Request): any {
 }
 
 async function processSearch(query: any, req: express.Request) {
-    const size = parseInt(req.query.limit, 10) || 100;
+    const size = req.query.limit ? parseInt(req.query.limit.toString(), 10) : 100;
 
     if (Object.keys(query).length < 1) {
         query.match_all = {};
@@ -81,7 +81,7 @@ function addNegatableTerms(query: any, field: string, terms: string[]) {
 app.get('/api/v1/posts', async (req: express.Request, res: express.Response) => {
     const query = {};
     if (req.query.tags) {
-        addNegatableTerms(query, 'tags', req.query.tags.split(' '));
+        addNegatableTerms(query, 'tags', req.query.tags.toString().split(' '));
     }
     res.send(await processSearch(query, req));
 });
