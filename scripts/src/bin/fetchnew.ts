@@ -154,7 +154,7 @@ async function main() {
 	try {
 		maxId = parseInt(readFileSync(MAX_ID_PATH).toString('utf8').trim(), 10);
 	} catch (e) {
-		console.error('Error loading maxId file:', e.stack || e);
+		console.error('Error loading maxId file:', (e as Error).stack || e);
 	}
 
 	if (maxId <= 0) {

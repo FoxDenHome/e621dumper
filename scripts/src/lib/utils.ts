@@ -1,5 +1,6 @@
+import { dirname, normalize } from 'path';
+
 import { mkdirSync } from 'fs';
-import { normalize, dirname } from 'path';
 
 const madeDirs = new Set();
 
@@ -17,7 +18,7 @@ export function mkdirp(dir: string) {
 	try {
 		mkdirSync(dir);
 	} catch (e) {
-		switch (e.code) {
+		switch ((e as any).code) {
 			case 'ENOENT':
 				mkdirp(dirname(dir));
 				mkdirSync(dir);
