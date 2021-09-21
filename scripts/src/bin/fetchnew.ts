@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '../lib/types';
 
 const config = require('../../config.json');
-const MAX_ID_PATH = `${__dirname}/e621posts.maxid`;
+const MAX_ID_PATH = config.maxIdPath;
 const client = new Client(config.elasticsearch);
 
 interface PostPage {

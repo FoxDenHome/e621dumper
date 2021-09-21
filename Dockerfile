@@ -14,3 +14,4 @@ WORKDIR /opt/app/scripts
 RUN npm ci && npm run build
 
 VOLUME /config
+VOLUME /usr/share/elasticsearch/data
