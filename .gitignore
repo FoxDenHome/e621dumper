@@ -1,4 +1,4 @@
 node_modules
-/scripts/e621.maxid
-/scripts/config.json
-/scripts/dist
+/e621.maxid
+/config.json
+/dist

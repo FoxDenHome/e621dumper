@@ -2,12 +2,11 @@ FROM elasticsearch:7.14.1
 
 RUN yum -y install bash nodejs npm
 
-COPY scripts /opt/app/scripts
-COPY esjson /opt/app/esjson
+COPY . /opt/app
 
-RUN mkdir -p /config && ln -s /config/config.json /opt/app/scripts/config.json
+RUN mkdir -p /config && ln -s /config/config.json /opt/app/config.json
 
-WORKDIR /opt/app/scripts
+WORKDIR /opt/app
 RUN npm ci && npm run build
 
 VOLUME /config
