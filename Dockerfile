@@ -1,9 +1,6 @@
 FROM elasticsearch:7.14.1
 
-ENV discovery.type=single-node
-
 RUN yum -y install bash nodejs npm
-
 
 COPY scripts /opt/app/scripts
 COPY esjson /opt/app/esjson
@@ -15,3 +12,7 @@ RUN npm ci && npm run build
 
 VOLUME /config
 VOLUME /usr/share/elasticsearch/data
+
+ENV discovery.type=single-node
+ENV network.host=_local_
+ENV network.bind_host=_local_
