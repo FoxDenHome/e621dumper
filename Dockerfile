@@ -15,3 +15,6 @@ VOLUME /usr/share/elasticsearch/data
 ENV discovery.type=single-node
 ENV network.host=_local_
 ENV network.bind_host=_local_
+
+ENTRYPOINT ["/bin/tini", "--", "/opt/app/init.sh"]
+CMD []
