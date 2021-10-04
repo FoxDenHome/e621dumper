@@ -78,7 +78,7 @@ function setHadErrors() {
 }
 
 function printStats() {
-	console.log('Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
+	console.log('Paused: ', downloadsPaused, 'Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
 }
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
