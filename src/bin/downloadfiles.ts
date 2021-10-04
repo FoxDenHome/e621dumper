@@ -1,8 +1,18 @@
 import { Client } from '@elastic/elasticsearch';
 import { Agent, request } from 'https';
 import { mkdirpFor, pathFixer } from '../lib/utils';
-import { stat, createWriteStream } from 'fs';
+import { stat, createWriteStream, readFile } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
+import { ArgumentParser } from 'argparse';
+
+const argParse = new ArgumentParser({
+	description: 'e621 downloadfiles'
+});
+argParse.add_argument('-t', '--type');
+argParse.add_argument('-f', '--force', { action: 'store_true' });
+argParse.add_argument('-l', '--looper', { action: 'store_true' });
+argParse.add_argument('-p', '--pauser'); 
+const ARGS = argParse.parse_args();
 
 const config = require('../../config.json');
 
@@ -20,11 +30,11 @@ let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCoun
 
 const agent = new Agent({ keepAlive: true });
 
-const DOWNLOAD_KIND = process.argv[2] || 'file';
+const DOWNLOAD_KIND = ARGS.type;
 const DEST_FOLDER = config.rootdir;
 
-const RECHECK_ALL = process.argv[3] === 'force';
-const EXIT_ERROR_IF_FOUND = process.argv[3] === 'error_if_found';
+const RECHECK_ALL = !!ARGS.force;
+const EXIT_ERROR_IF_FOUND = !!ARGS.looper;
 
 const DOWNLOADED_KEY: FileDownloadedKeys = <FileDownloadedKeys>`${DOWNLOAD_KIND}_downloaded`;
 const DELETED_KEY: FileDeletedKeys = <FileDeletedKeys>`${DOWNLOAD_KIND}_deleted`;
@@ -34,6 +44,23 @@ const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 let inProgress = 0;
 let MAX_PARALLEL = config.maxParallel;
 let esDone = false;
+
+let downloadsPaused = false;
+let pauserInterval: NodeJS.Timeout | undefined = undefined;
+if (ARGS.pauser) {
+	pauserInterval = setInterval(() => {
+		readFile(ARGS.pauser, { encoding: 'ascii' }, (err, data) => {
+			if (err) {
+				return;
+			}
+			const newDownloadsPaused = data.toLowerCase().includes('pause');
+			if (downloadsPaused !== newDownloadsPaused) {
+				downloadsPaused = newDownloadsPaused;
+				console.log('Setting pause mode to', downloadsPaused);
+			}
+		});
+	}, 1000);
+}
 
 const client = new Client(config.elasticsearch);
 
@@ -60,9 +87,15 @@ printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
 
 function checkEnd() {
-	if (queue.length === 0 && esDone && scanInterval !== undefined) {
-		clearInterval(scanInterval);
-		scanInterval = undefined;
+	if (queue.length === 0 && esDone) {
+		if (scanInterval) {
+			clearInterval(scanInterval);
+			scanInterval = undefined;
+		}
+		if (pauserInterval) {
+			clearInterval(pauserInterval);
+			pauserInterval = undefined;
+		}
 	}
 }
 
@@ -143,10 +176,19 @@ function downloadDone(file: QueueEntry, success: boolean | 'skipped', fileDelete
 		console.error(err);
 		setHadErrors();
 	});
-
 }
 
-function downloadNext() {
+function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitWhilePaused() {
+	while (downloadsPaused) {
+		await delay(1000);
+	}
+}
+
+async function downloadNext() {
 	checkEnd();
 
 	if (inProgress >= MAX_PARALLEL) {
@@ -158,6 +200,8 @@ function downloadNext() {
 		return;
 	}
 	inProgress++;
+
+	await waitWhilePaused();
 
 	const out = createWriteStream(file.dest);
 	request(file.url!, { agent }, (res) => {

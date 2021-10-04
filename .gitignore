@@ -2,3 +2,4 @@ node_modules
 /e621.maxid
 /config.json
 /dist
+/tmp

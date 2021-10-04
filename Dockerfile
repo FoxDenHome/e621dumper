@@ -10,6 +10,7 @@ WORKDIR /opt/app
 RUN npm ci && npm run build
 
 VOLUME /config
+VOLUME /data
 VOLUME /usr/share/elasticsearch/data
 
 ENV discovery.type=single-node

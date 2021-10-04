@@ -8,21 +8,21 @@ do
 done
 
 echo 'DL file'
-until node dist/bin/downloadfiles.js file error_if_found
+until node dist/bin/downloadfiles.js --type=file --looper --pauser=/config/pauser
 do
 	echo 'Retrying DL file'
 	sleep 5
 done
 
 echo 'DL sample'
-until node dist/bin/downloadfiles.js sample error_if_found
+until node dist/bin/downloadfiles.js --type=sample --looper --pauser=/config/pauser
 do
 	echo 'Retrying DL sample'
 	sleep 5
 done
 
 echo 'DL preview'
-until node dist/bin/downloadfiles.js preview error_if_found
+until node dist/bin/downloadfiles.js --type=preview --looper --pauser=/config/pauser
 do
 	echo 'Retrying DL preview'
 	sleep 5
