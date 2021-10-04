@@ -1,6 +1,6 @@
 FROM elasticsearch:7.14.1
 
-RUN yum -y install bash nodejs npm
+RUN yum -y install bash nodejs npm util-linux
 
 COPY . /opt/app
 
