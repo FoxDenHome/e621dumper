@@ -50,10 +50,7 @@ let pauserInterval: NodeJS.Timeout | undefined = undefined;
 if (ARGS.pauser) {
 	pauserInterval = setInterval(() => {
 		readFile(ARGS.pauser, { encoding: 'ascii' }, (err, data) => {
-			if (err) {
-				return;
-			}
-			const newDownloadsPaused = data.toLowerCase().includes('pause');
+			const newDownloadsPaused = !err && data.toLowerCase().includes('pause');
 			if (downloadsPaused !== newDownloadsPaused) {
 				downloadsPaused = newDownloadsPaused;
 				console.log('Setting pause mode to', downloadsPaused);
