@@ -1,5 +1,7 @@
 FROM node:lts-alpine
 
+RUN apk add bash
+
 COPY . /opt/app
 
 RUN mkdir -p /config && ln -s /config/config.json /opt/app/config.json
