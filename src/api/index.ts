@@ -1,4 +1,5 @@
 import * as express from 'express';
+
 import { Client } from '@elastic/elasticsearch';
 import { URL } from 'url';
 
@@ -92,3 +93,11 @@ app.post('/api/v1/posts', async (req: express.Request, res: express.Response) =>
 });
 
 app.listen(8001, () => console.log('e621dumper API online'));
+
+process.on('SIGTERM', () => {
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    process.exit(0);
+});
