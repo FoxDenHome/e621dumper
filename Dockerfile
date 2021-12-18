@@ -1,6 +1,6 @@
 FROM node:lts-alpine
 
-RUN apk add bash
+RUN apk add bash curl
 
 COPY . /opt/app
 
