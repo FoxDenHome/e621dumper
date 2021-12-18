@@ -92,6 +92,10 @@ app.post('/api/v1/posts', async (req: express.Request, res: express.Response) =>
     res.send(await processSearch(query, req));
 });
 
+app.post('/api/v1/healthcheck', async (req: express.Request, res: express.Response) => {
+    res.send({ ok: true });
+});
+
 app.listen(8001, () => console.log('e621dumper API online'));
 
 process.on('SIGTERM', () => {
