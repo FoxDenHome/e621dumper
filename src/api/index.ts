@@ -92,7 +92,7 @@ app.post('/api/v1/posts', async (req: express.Request, res: express.Response) =>
     res.send(await processSearch(query, req));
 });
 
-app.get('/api/v1/healthcheck', async (req: express.Request, res: express.Response) => {
+app.get('/api/v1/healthcheck', async (_: express.Request, res: express.Response) => {
     res.send({ ok: true });
 });
 
