@@ -26,4 +26,4 @@ jobs:
           build-args: |
             GIT_REVISION=${{ github.sha }}
           tags: |
-            ghcr.io/doridian/e621dumper/e621dumper:latest
+            ghcr.io/foxdenhome/e621dumper/e621dumper:latest
