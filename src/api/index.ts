@@ -41,7 +41,7 @@ async function processSearch(query: any, req: express.Request) {
         },
     });
 
-    return res.body.hits.hits.map((hit: any) => filterESHit(hit, req));
+    return res.hits.hits.map((hit: any) => filterESHit(hit, req));
 }
 
 function addTerms(query: any, field: string, terms: string[], typ = 'must') {
