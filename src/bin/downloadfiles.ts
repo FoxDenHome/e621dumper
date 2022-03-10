@@ -9,7 +9,6 @@ const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
 });
 argParse.add_argument('-t', '--type');
-argParse.add_argument('-f', '--force', { action: 'store_true' });
 argParse.add_argument('-l', '--looper', { action: 'store_true' });
 argParse.add_argument('-p', '--pauser'); 
 const ARGS = argParse.parse_args();
@@ -33,7 +32,6 @@ const agent = new Agent({ keepAlive: true });
 const DOWNLOAD_KIND = ARGS.type;
 const DEST_FOLDER = config.rootdir;
 
-const RECHECK_ALL = !!ARGS.force;
 const EXIT_ERROR_IF_FOUND = !!ARGS.looper;
 
 const DOWNLOADED_KEY: FileDownloadedKeys = <FileDownloadedKeys>`${DOWNLOAD_KIND}_downloaded`;
@@ -63,15 +61,12 @@ const client = new Client(config.elasticsearch);
 
 const mustNot = [
 	{ term: { [DELETED_KEY]: true } },
+	{ term: { [DOWNLOADED_KEY]: true } },
 ];
 
 const RES_SKIP = 'skipped';
 
 const gotFiles = new Set();
-
-if (!RECHECK_ALL) {
-	mustNot.push({ term: { [DOWNLOADED_KEY]: true } });
-}
 
 function setHadErrors() {
 	process.exitCode = 1;
