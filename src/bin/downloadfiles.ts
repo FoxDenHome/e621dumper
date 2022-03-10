@@ -4,6 +4,8 @@ import { mkdirpFor, pathFixer } from '../lib/utils';
 import { stat, createWriteStream, readFile } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
+import { readdirRecursive } from '../lib/scandir';
+import { resolve } from 'path';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -44,6 +46,8 @@ const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 let inProgress = 0;
 let MAX_PARALLEL = config.maxParallel;
 let esDone = false;
+
+let ALL_FILES: Set<string>;
 
 let downloadsPaused = false;
 let pauserInterval: NodeJS.Timeout | undefined = undefined;
@@ -105,7 +109,7 @@ function addURL(item: ESItem) {
 		id: item._id,
 		downloaded: item._source[DOWNLOADED_KEY],
 		deleted: item._source[DELETED_KEY],
-		dest: url ? (DEST_FOLDER + pathFixer(url.replace(/^https?:\/\//, ''))) : '',
+		dest: url ? resolve(DEST_FOLDER, pathFixer(url.replace(/^https?:\/\//, ''))) : '',
 	};
 
 	if (!file.dest || gotFiles.has(file.dest)) {
@@ -116,6 +120,12 @@ function addURL(item: ESItem) {
 	gotFiles.add(file.dest);
 
 	mkdirpFor(file.dest);
+
+	if (!ALL_FILES.has(file.dest)) {
+		queue.push(file);
+		downloadNext();
+		return;
+	}
 
 	stat(file.dest, (err, stat) => {
 		if (err && err.code !== 'ENOENT') {
@@ -234,45 +244,56 @@ async function downloadNext() {
 	}).end();
 }
 
-client.search({
-	index: 'e621posts',
-	scroll: '10s',
-	body: {
-		size: 100,
-		query: {
-			bool: {
-				must_not: mustNot,
-				must: { exists: { field: URL_KEY } },
+async function main() {
+	if (RECHECK_ALL) {
+		console.log('Scanning all files...');
+		ALL_FILES = await readdirRecursive(DEST_FOLDER);
+		console.log('DONE!');
+	} else {
+		ALL_FILES = new Set<string>();
+	}
+
+	client.search({
+		index: 'e621posts',
+		scroll: '10s',
+		body: {
+			size: 100,
+			query: {
+				bool: {
+					must_not: mustNot,
+					must: { exists: { field: URL_KEY } },
+				},
 			},
 		},
-	},
-}, function getMoreUntilDone(error, response) {
-	if (error) {
-		console.error(error);
-		setHadErrors();
-		return;
-	}
-
-	// collect all the records
-	response.body.hits.hits.forEach((hit: ESItem) => {
-		if (EXIT_ERROR_IF_FOUND) {
-			process.exitCode = 2;
+	}, function getMoreUntilDone(error, response) {
+		if (error) {
+			console.error(error);
+			setHadErrors();
+			return;
 		}
-		foundCount++;
-		addURL(hit);
+
+		// collect all the records
+		response.body.hits.hits.forEach((hit: ESItem) => {
+			if (EXIT_ERROR_IF_FOUND) {
+				process.exitCode = 2;
+			}
+			foundCount++;
+			addURL(hit);
+		});
+
+		totalCount = response.body.hits.total.value;
+
+		if (response.body.hits.total.value !== foundCount) {
+			client.scroll({
+				scroll_id: response.body._scroll_id,
+				scroll: '10s',
+			}, getMoreUntilDone);
+		} else {
+			console.log('ES all added', foundCount);
+			esDone = true;
+			checkEnd();
+		}
 	});
+}
 
-	totalCount = response.body.hits.total.value;
-
-	if (response.body.hits.total.value !== foundCount) {
-		client.scroll({
-			scroll_id: response.body._scroll_id,
-			scroll: '10s',
-		}, getMoreUntilDone);
-	} else {
-		console.log('ES all added', foundCount);
-		esDone = true;
-		checkEnd();
-	}
-});
-
+main().catch(e => console.error(e.stack || e));
