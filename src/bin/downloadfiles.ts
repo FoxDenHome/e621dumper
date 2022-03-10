@@ -1,11 +1,11 @@
 import { Client } from '@elastic/elasticsearch';
 import { Agent, request } from 'https';
-import { mkdirpFor, pathFixer } from '../lib/utils';
+import { getNumericValue, mkdirpFor, pathFixer } from '../lib/utils';
 import { stat, readFile } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
-import { SearchHit, SearchTotalHits } from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
+import { SearchHit } from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
 import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 const argParse = new ArgumentParser({
@@ -247,12 +247,7 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 		addURL(hit as ESItem);
 	});
 
-	const total = response.hits!.total;
-	if ((total as SearchTotalHits).value !== undefined) {
-		totalCount = (total as SearchTotalHits).value;
-	} else if (total !== undefined) {
-		totalCount = total as number;
-	}
+	totalCount = getNumericValue(response.hits.total);
 
 	if (totalCount === foundCount) {
 		console.log('ES all added', foundCount);

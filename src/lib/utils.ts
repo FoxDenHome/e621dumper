@@ -33,6 +33,13 @@ export function mkdirp(dir: string) {
 	madeDirs.add(dir);
 }
 
+export function getNumericValue(val: any): number {
+	if (val.value !== undefined) {
+		return val.value as number;
+	}
+	return val as number;
+}
+
 export function pathFixer(path: string) {
 	path = normalize(path);
 	if (path.startsWith('.') || path.startsWith('/')) {

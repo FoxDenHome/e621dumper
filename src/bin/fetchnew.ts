@@ -2,6 +2,7 @@ import { Client } from '@elastic/elasticsearch';
 import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
 import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '../lib/types';
+import { getNumericValue } from '../lib/utils';
 
 const config = require('../../config.json');
 const MAX_ID_PATH = config.maxIdPath;
@@ -170,7 +171,7 @@ async function main() {
 				},
 			},
 		});
-		maxId = maxIdRes.body.aggregations.max_id.value;
+		maxId = getNumericValue(maxIdRes!.aggregations!.max_id);
 	}
 
 	console.log(`Starting with maxId = ${maxId}`);
@@ -210,8 +211,8 @@ async function main() {
 			body: pageQueue,
 		});
 
-		if (result.body.errors) {
-			throw new Error(JSON.stringify(result.body));
+		if (result.errors) {
+			throw new Error(JSON.stringify(result));
 		}
 
 		if (data.minId <= maxId) {
