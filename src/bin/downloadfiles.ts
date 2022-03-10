@@ -1,9 +1,12 @@
 import { Client } from '@elastic/elasticsearch';
 import { Agent, request } from 'https';
 import { mkdirpFor, pathFixer } from '../lib/utils';
-import { stat, createWriteStream, readFile } from 'fs';
+import { stat, readFile } from 'fs/promises';
+import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
+import { SearchHit, SearchTotalHits } from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
+import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -46,14 +49,13 @@ let esDone = false;
 let downloadsPaused = false;
 let pauserInterval: NodeJS.Timeout | undefined = undefined;
 if (ARGS.pauser) {
-	pauserInterval = setInterval(() => {
-		readFile(ARGS.pauser, { encoding: 'ascii' }, (err, data) => {
-			const newDownloadsPaused = !err && data.toLowerCase().includes('pause');
-			if (downloadsPaused !== newDownloadsPaused) {
-				downloadsPaused = newDownloadsPaused;
-				console.log('Setting pause mode to', downloadsPaused);
-			}
-		});
+	pauserInterval = setInterval(async () => {
+		const data = await readFile(ARGS.pauser, { encoding: 'ascii' });
+		const newDownloadsPaused = data.toLowerCase().includes('pause');
+		if (downloadsPaused !== newDownloadsPaused) {
+			downloadsPaused = newDownloadsPaused;
+			console.log('Setting pause mode to', downloadsPaused);
+		}
 	}, 1000);
 }
 
@@ -91,7 +93,7 @@ function checkEnd() {
 	}
 }
 
-function addURL(item: ESItem) {
+async function addURL(item: ESItem) {
 	const url = item._source[URL_KEY];
 
 	const file: QueueEntry = {
@@ -112,22 +114,25 @@ function addURL(item: ESItem) {
 
 	mkdirpFor(file.dest);
 
-	stat(file.dest, (err, stat) => {
-		if (err && err.code !== 'ENOENT') {
-			console.error(err);
-			return;
-		}
-		if (stat && (stat.size === file.size || file.size <= 0)) {
+	try {
+		const stat_res = await stat(file.dest);
+		if (stat_res && (stat_res.size === file.size || file.size <= 0)) {
 			inProgress++;
 			downloadDone(file, RES_SKIP);
 			return;
 		}
-		queue.push(file);
-		downloadNext();
-	});
+	} catch (err) {
+		if ((err as any).code !== 'ENOENT') {
+			console.error(err);
+			return;
+		}
+	}
+
+	queue.push(file);
+	downloadNext();
 }
 
-function downloadDone(file: QueueEntry, success: boolean | 'skipped', fileDeleted = false) {
+async function downloadDone(file: QueueEntry, success: boolean | 'skipped', fileDeleted = false) {
 	if (success === RES_SKIP) {
 		skippedCount++;
 	} else if (success) {
@@ -155,19 +160,18 @@ function downloadDone(file: QueueEntry, success: boolean | 'skipped', fileDelete
 		return;
 	}
 
-	client.update({
-		index: 'e621posts',
-		id: file.id,
-		body: {
-			doc: docBody,
-		},
-	}, (err) => {
-		if (!err) {
-			return;
-		}
+	try {
+		await client.update({
+			index: 'e621posts',
+			id: file.id,
+			body: {
+				doc: docBody,
+			},
+		});
+	} catch (err) {
 		console.error(err);
 		setHadErrors();
-	});
+	}
 }
 
 function delay(ms: number) {
@@ -208,19 +212,23 @@ async function downloadNext() {
 			return;
 		}
 		res.pipe(out);
-		out.on('finish', () => {
+		out.on('finish', async () => {
 			if (file.size <= 0) {
 				downloadDone(file, true);
 				return;
 			}
 
-			stat(file.dest, (err, stat) => {
-				const success = !err && stat && stat.size === file.size;
-				if (!success) {
-					setHadErrors();
-				}
-				downloadDone(file, success);
-			});
+			let success = false;
+			try {
+				const stat_res = await stat(file.dest);
+				success = stat_res && stat_res.size === file.size;
+			} catch {
+				success = false;
+			}
+			if (!success) {
+				setHadErrors();
+			}
+			downloadDone(file, success);
 		});
 	}).on('error', (e) => {
 		downloadDone(file, false);
@@ -229,45 +237,54 @@ async function downloadNext() {
 	}).end();
 }
 
-client.search({
-	index: 'e621posts',
-	scroll: '10s',
-	body: {
-		size: 100,
-		query: {
-			bool: {
-				must_not: mustNot,
-				must: { exists: { field: URL_KEY } },
-			},
-		},
-	},
-}, function getMoreUntilDone(error, response) {
-	if (error) {
-		console.error(error);
-		setHadErrors();
-		return;
-	}
-
+async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 	// collect all the records
-	response.body.hits.hits.forEach((hit: ESItem) => {
+	response.hits.hits.forEach((hit: SearchHit) => {
 		if (EXIT_ERROR_IF_FOUND) {
 			process.exitCode = 2;
 		}
 		foundCount++;
-		addURL(hit);
+		addURL(hit as ESItem);
 	});
 
-	totalCount = response.body.hits.total.value;
+	const total = response.hits!.total;
+	if ((total as SearchTotalHits).value !== undefined) {
+		totalCount = (total as SearchTotalHits).value;
+	} else if (total !== undefined) {
+		totalCount = total as number;
+	}
 
-	if (response.body.hits.total.value !== foundCount) {
-		client.scroll({
-			scroll_id: response.body._scroll_id,
-			scroll: '10s',
-		}, getMoreUntilDone);
-	} else {
+	if (totalCount === foundCount) {
 		console.log('ES all added', foundCount);
 		esDone = true;
 		checkEnd();
+		return false;
 	}
-});
 
+	return true;
+}
+
+async function main() {
+	let response = await client.search({
+		index: 'e621posts',
+		scroll: '10s',
+		body: {
+			size: 100,
+			query: {
+				bool: {
+					must_not: mustNot,
+					must: { exists: { field: URL_KEY } },
+				},
+			},
+		},
+	});
+
+	while (await getMoreUntilDone(response)) {
+		response = await client.scroll({
+			scroll_id: response._scroll_id,
+			scroll: '10s',
+		});
+	}
+}
+
+main().catch(e => console.error(e.stack || e));
