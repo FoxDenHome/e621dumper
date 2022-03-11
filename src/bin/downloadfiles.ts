@@ -262,7 +262,7 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 async function main() {
 	let response = await client.search({
 		index: 'e621posts',
-		scroll: '10s',
+		scroll: '60s',
 		body: {
 			size: 100,
 			query: {
@@ -277,7 +277,7 @@ async function main() {
 	while (await getMoreUntilDone(response)) {
 		response = await client.scroll({
 			scroll_id: response._scroll_id,
-			scroll: '10s',
+			scroll: '60s',
 		});
 	}
 }
