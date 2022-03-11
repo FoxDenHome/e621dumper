@@ -1,11 +1,13 @@
 import { Client } from '@elastic/elasticsearch';
-import { Agent, request } from 'https';
 import { getNumericValue, mkdirpFor, pathFixer } from '../lib/utils';
 import { stat, readFile } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
 import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import { request, Agent } from 'https';
+import { IncomingMessage } from 'http';
+import { EventEmitter } from 'stream';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -106,7 +108,7 @@ async function addURL(item: ESItem) {
 
 	if (!file.dest || gotFiles.has(file.dest)) {
 		inProgress++;
-		downloadDone(file, RES_SKIP);
+		await downloadDone(file, RES_SKIP);
 		return;
 	}
 	gotFiles.add(file.dest);
@@ -117,7 +119,7 @@ async function addURL(item: ESItem) {
 		const stat_res = await stat(file.dest);
 		if (stat_res && (stat_res.size === file.size || file.size <= 0)) {
 			inProgress++;
-			downloadDone(file, RES_SKIP);
+			await downloadDone(file, RES_SKIP);
 			return;
 		}
 	} catch (err) {
@@ -128,7 +130,7 @@ async function addURL(item: ESItem) {
 	}
 
 	queue.push(file);
-	downloadNext();
+	setImmediate(downloadNext);
 }
 
 async function downloadDone(file: QueueEntry, success: boolean | 'skipped', fileDeleted = false) {
@@ -142,7 +144,7 @@ async function downloadDone(file: QueueEntry, success: boolean | 'skipped', file
 	doneCount++;
 	inProgress--;
 
-	downloadNext();
+	setImmediate(downloadNext);
 
 	const docBody: Partial<ESPost> = {};
 	if (success) {
@@ -183,6 +185,18 @@ async function waitWhilePaused() {
 	}
 }
 
+function requestPromise(url: string): Promise<IncomingMessage> {
+    return new Promise((resolve, reject) => {
+    	request(url, { agent }, resolve).on('error', reject).end();
+    });
+}
+
+function waitOnEvent(obj: EventEmitter, event: string): Promise<void> {
+	return new Promise((resolve) => {
+		obj.once(event, resolve);
+	});
+}
+
 async function downloadNext() {
 	checkEnd();
 
@@ -199,41 +213,47 @@ async function downloadNext() {
 	await waitWhilePaused();
 
 	const out = createWriteStream(file.dest);
-	request(file.url!, { agent }, (res) => {
+
+	try {
+		const res = await requestPromise(file.url!);
+
 		if (res.statusCode === 404) {
-			downloadDone(file, false, true);
+			await downloadDone(file, false, true);
 			return;
 		}
+
 		if (res.statusCode !== 200) {
-			downloadDone(file, false);
 			console.error('Bad status code ', res.statusCode, ' on ', file.url);
 			setHadErrors();
+			await downloadDone(file, false);
 			return;
 		}
-		res.pipe(out);
-		out.on('finish', async () => {
-			if (file.size <= 0) {
-				downloadDone(file, true);
-				return;
-			}
 
-			let success = false;
-			try {
-				const stat_res = await stat(file.dest);
-				success = stat_res && stat_res.size === file.size;
-			} catch {
-				success = false;
-			}
-			if (!success) {
-				setHadErrors();
-			}
-			downloadDone(file, success);
-		});
-	}).on('error', (e) => {
-		downloadDone(file, false);
+		res.pipe(out);
+
+		await waitOnEvent(out, 'finish');
+
+		if (file.size <= 0) {
+			await downloadDone(file, true);
+			return;
+		}
+
+		let success = false;
+		try {
+			const stat_res = await stat(file.dest);
+			success = stat_res && stat_res.size === file.size;
+		} catch {
+			success = false;
+		}
+		if (!success) {
+			setHadErrors();
+		}
+		await downloadDone(file, success);
+	} catch (e) {
 		console.error('Error ', e, ' on ', file.url);
 		setHadErrors();
-	}).end();
+		await downloadDone(file, false);
+	}
 }
 
 async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
