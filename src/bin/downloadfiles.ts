@@ -5,7 +5,6 @@ import { stat, readFile } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
-import { SearchHit } from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
 import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 const argParse = new ArgumentParser({
@@ -239,13 +238,14 @@ async function downloadNext() {
 
 async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 	// collect all the records
-	response.hits.hits.forEach((hit: SearchHit) => {
-		if (EXIT_ERROR_IF_FOUND) {
-			process.exitCode = 2;
-		}
+	if (EXIT_ERROR_IF_FOUND) {
+		process.exitCode = 2;
+	}
+
+	for (const hit of response.hits.hits) {
 		foundCount++;
-		addURL(hit as ESItem);
-	});
+		await addURL(hit as ESItem);
+	}
 
 	totalCount = getNumericValue(response.hits.total);
 
