@@ -93,30 +93,41 @@ async function esRunBatchUpdate(min: number) {
 	}
 	const todo = esQueue;
 	esQueue = [];
-
+	
 	try {
 		await client.bulk({
 			operations: todo,
 		});
+		console.log('Processed ', todo.length / 2, ' batched updates');
 	} catch (err) {
 		console.error(err);
 		setHadErrors();
 	}
 }
 
-async function checkEnd() {
-	if (queue.length === 0 && inProgress === 0 && esDone) {
-		if (scanInterval) {
-			clearInterval(scanInterval);
-			scanInterval = undefined;
-		}
-		if (pauserInterval) {
-			clearInterval(pauserInterval);
-			pauserInterval = undefined;
-		}
+let batcherInterval: NodeJS.Timeout | undefined = setInterval(() => esRunBatchUpdate(ES_BATCH_SIZE), 1000);
 
-		await esRunBatchUpdate(1);
+async function checkEnd() {
+	if (queue.length > 0 || inProgress > 0 || !esDone) {
+		return;
 	}
+
+	if (scanInterval) {
+		clearInterval(scanInterval);
+		scanInterval = undefined;
+	}
+
+	if (pauserInterval) {
+		clearInterval(pauserInterval);
+		pauserInterval = undefined;
+	}
+
+	if (batcherInterval) {
+		clearInterval(batcherInterval);
+		batcherInterval = undefined;
+	}
+
+	await esRunBatchUpdate(1);
 }
 
 async function addURL(item: ESItem) {
@@ -207,7 +218,6 @@ async function downloadDone(file: QueueEntry, success: boolean | 'skipped', file
 		doc: docBody,
 	});
 
-	await esRunBatchUpdate(ES_BATCH_SIZE);
 	await checkEnd();
 }
 
@@ -304,8 +314,6 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 		promises.push(addURL(hit as ESItem));
 	}
 	await Promise.all(promises);
-
-	await esRunBatchUpdate(ES_BATCH_SIZE);
 
 	if (totalCount === foundCount) {
 		console.log('ES all added', foundCount);
