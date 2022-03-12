@@ -117,16 +117,16 @@ async function addURL(item: ESItem) {
 
 	const dir = mkdirpFor(file.dest);
 
-	if (!listedFiles.has(dir)) {
-		const fileSet = new Set<string>();
+	let fileSet = listedFiles.get(dir);
+	if (!fileSet) {
+		fileSet = new Set<string>();
 		for (const file of await readdir(dir)) {
 			fileSet.add(file);
 		}
 		listedFiles.set(dir, fileSet);
 	}
 
-	const files = listedFiles.get(dir)!;
-	if (files.has(basename(file.dest))) {
+	if (fileSet.has(basename(file.dest))) {
 		try {
 			const stat_res = await stat(file.dest);
 			if (stat_res && (stat_res.size === file.size || file.size <= 0)) {
