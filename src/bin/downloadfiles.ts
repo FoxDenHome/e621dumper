@@ -82,7 +82,7 @@ function setHadErrors() {
 }
 
 function printStats() {
-	console.log('Paused: ', downloadsPaused, 'Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'DirList: ', listCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
+	console.log('Total:', totalCount, 'Queue:', queue.length, 'Done:', doneCount, 'Success:', successCount, 'Failed:', errorCount, 'Skipped:', skippedCount, 'DirList:', listCount, 'Percent:', Math.floor((doneCount / totalCount) * 100));
 }
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
@@ -99,7 +99,7 @@ async function esRunBatchUpdate(min: number) {
 		await client.bulk({
 			operations: todo,
 		});
-		console.log('Processed ', todo.length / 2, ' batched updates');
+		console.log('Processed', todo.length / 2, 'batched updates');
 	} catch (err) {
 		console.error(err);
 		setHadErrors();
