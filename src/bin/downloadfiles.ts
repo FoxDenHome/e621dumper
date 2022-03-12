@@ -258,13 +258,13 @@ async function downloadNext() {
 
 async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 	// collect all the records
-	if (EXIT_ERROR_IF_FOUND) {
-		process.exitCode = 2;
-	}
-
 	for (const hit of response.hits.hits) {
 		foundCount++;
 		await addURL(hit as ESItem);
+	}
+
+	if (foundCount > 0 && EXIT_ERROR_IF_FOUND && process.exitCode <= 0) {
+		process.exitCode = 2;
 	}
 
 	totalCount = getNumericValue(response.hits.total);
