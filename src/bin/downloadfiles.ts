@@ -273,17 +273,19 @@ async function downloadNext() {
 }
 
 async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
-	// collect all the records
-	for (const hit of response.hits.hits) {
-		foundCount++;
-		await addURL(hit as ESItem);
-	}
+	totalCount = getNumericValue(response.hits.total);
 
-	if (foundCount > 0 && EXIT_ERROR_IF_FOUND && !process.exitCode) {
+	if (totalCount > 0 && EXIT_ERROR_IF_FOUND && !process.exitCode) {
 		process.exitCode = 2;
 	}
 
-	totalCount = getNumericValue(response.hits.total);
+	// collect all the records
+	const promises: Promise<void>[] = [];
+	for (const hit of response.hits.hits) {
+		foundCount++;
+		promises.push(addURL(hit as ESItem));
+	}
+	await Promise.all(promises);
 
 	if (totalCount === foundCount) {
 		console.log('ES all added', foundCount);
