@@ -87,13 +87,12 @@ function printStats() {
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
 
-async function esRunBatchUpdate() {
-	const todo = esQueue;
-	esQueue = [];
-
-	if (todo.length === 0) {
+async function esRunBatchUpdate(min: number) {
+	if (esQueue.length < min) {
 		return;
 	}
+	const todo = esQueue;
+	esQueue = [];
 
 	await client.bulk({
 		operations: todo,
@@ -111,7 +110,7 @@ async function checkEnd() {
 			pauserInterval = undefined;
 		}
 
-		await esRunBatchUpdate();
+		await esRunBatchUpdate(1);
 	}
 }
 
@@ -203,6 +202,7 @@ async function downloadDone(file: QueueEntry, success: boolean | 'skipped', file
 		doc: docBody,
 	});
 
+	await esRunBatchUpdate(ES_BATCH_SIZE);
 	await checkEnd();
 }
 
@@ -300,7 +300,7 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 	}
 	await Promise.all(promises);
 
-	await esRunBatchUpdate();
+	await esRunBatchUpdate(ES_BATCH_SIZE);
 
 	if (totalCount === foundCount) {
 		console.log('ES all added', foundCount);
