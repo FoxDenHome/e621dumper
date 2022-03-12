@@ -87,6 +87,7 @@ function printStats() {
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
 
+const ES_BATCH_SIZE_2 = ES_BATCH_SIZE * 2;
 async function esRunBatchUpdate(min: number) {
 	if (esQueue.length < min) {
 		return;
@@ -105,7 +106,7 @@ async function esRunBatchUpdate(min: number) {
 	}
 }
 
-let batcherInterval: NodeJS.Timeout | undefined = setInterval(() => esRunBatchUpdate(ES_BATCH_SIZE), 1000);
+let batcherInterval: NodeJS.Timeout | undefined = setInterval(() => esRunBatchUpdate(ES_BATCH_SIZE_2), 1000);
 
 async function checkEnd() {
 	if (queue.length > 0 || inProgress > 0 || !esDone) {
