@@ -48,6 +48,8 @@ let inProgress = 0;
 let MAX_PARALLEL = config.maxParallel;
 let esDone = false;
 
+EventEmitter.defaultMaxListeners = MAX_PARALLEL * 20;
+
 let downloadsPaused = false;
 let pauserInterval: NodeJS.Timeout | undefined = undefined;
 if (ARGS.pauser) {
