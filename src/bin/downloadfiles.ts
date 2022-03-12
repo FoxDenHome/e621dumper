@@ -30,7 +30,7 @@ interface QueueEntry {
 };
 
 const queue: QueueEntry[] = [];
-let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCount = 0, totalCount = 0;
+let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCount = 0, totalCount = 0, listCount = 0;
 
 const agent = new Agent({ keepAlive: true });
 
@@ -78,7 +78,7 @@ function setHadErrors() {
 }
 
 function printStats() {
-	console.log('Paused: ', downloadsPaused, 'Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
+	console.log('Paused: ', downloadsPaused, 'Total: ', totalCount, 'Queue: ', queue.length, 'Done: ', doneCount, 'Success: ', successCount, 'Failed: ', errorCount, 'Skipped: ', skippedCount, 'DirList: ', listCount, 'Percent: ', Math.floor((doneCount / totalCount) * 100));
 }
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
@@ -123,6 +123,7 @@ async function addURL(item: ESItem) {
 		for (const file of await readdir(dir)) {
 			fileSet.add(file);
 		}
+		listCount++;
 		listedFiles.set(dir, fileSet);
 	}
 
