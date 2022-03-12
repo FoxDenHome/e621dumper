@@ -94,9 +94,14 @@ async function esRunBatchUpdate(min: number) {
 	const todo = esQueue;
 	esQueue = [];
 
-	await client.bulk({
-		operations: todo,
-	});
+	try {
+		await client.bulk({
+			operations: todo,
+		});
+	} catch (err) {
+		console.error(err);
+		setHadErrors();
+	}
 }
 
 async function checkEnd() {
