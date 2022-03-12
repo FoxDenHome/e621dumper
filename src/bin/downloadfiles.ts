@@ -263,7 +263,7 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 		await addURL(hit as ESItem);
 	}
 
-	if (foundCount > 0 && EXIT_ERROR_IF_FOUND && process.exitCode <= 0) {
+	if (foundCount > 0 && EXIT_ERROR_IF_FOUND && !process.exitCode) {
 		process.exitCode = 2;
 	}
 
