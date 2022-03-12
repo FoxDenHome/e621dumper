@@ -4,7 +4,7 @@ import { stat, readFile, readdir } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
-import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import { BulkOperationContainer, BulkUpdateAction, SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 import { request, Agent } from 'https';
 import { IncomingMessage } from 'http';
 import { EventEmitter } from 'stream';
@@ -29,7 +29,10 @@ interface QueueEntry {
 	dest: string,
 };
 
+type ESBulkType = BulkOperationContainer | BulkUpdateAction<ESPost, Partial<ESPost>>;
+
 const queue: QueueEntry[] = [];
+let esQueue: ESBulkType[] = [];
 let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCount = 0, totalCount = 0, listCount = 0;
 
 const agent = new Agent({ keepAlive: true });
@@ -48,8 +51,6 @@ const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
 let esDone = false;
-
-EventEmitter.defaultMaxListeners = Math.max(ES_BATCH_SIZE * 5, MAX_PARALLEL * 20);
 
 let downloadsPaused = false;
 let pauserInterval: NodeJS.Timeout | undefined = undefined;
@@ -86,8 +87,21 @@ function printStats() {
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
 
-function checkEnd() {
-	if (queue.length === 0 && esDone) {
+async function esRunBatchUpdate() {
+	const todo = esQueue;
+	esQueue = [];
+
+	if (todo.length === 0) {
+		return;
+	}
+
+	await client.bulk({
+		operations: todo,
+	});
+}
+
+async function checkEnd() {
+	if (queue.length === 0 && inProgress === 0 && esDone) {
 		if (scanInterval) {
 			clearInterval(scanInterval);
 			scanInterval = undefined;
@@ -96,6 +110,8 @@ function checkEnd() {
 			clearInterval(pauserInterval);
 			pauserInterval = undefined;
 		}
+
+		await esRunBatchUpdate();
 	}
 }
 
@@ -178,18 +194,16 @@ async function downloadDone(file: QueueEntry, success: boolean | 'skipped', file
 		return;
 	}
 
-	try {
-		await client.update({
-			index: 'e621posts',
-			id: file.id,
-			body: {
-				doc: docBody,
-			},
-		});
-	} catch (err) {
-		console.error(err);
-		setHadErrors();
-	}
+	esQueue.push({
+		update: {
+			_index: 'e621posts',
+			_id: file.id,
+		},
+	}, {
+		doc: docBody,
+	});
+
+	await checkEnd();
 }
 
 function delay(ms: number) {
@@ -215,8 +229,6 @@ function waitOnEvent(obj: EventEmitter, event: string): Promise<void> {
 }
 
 async function downloadNext() {
-	checkEnd();
-
 	if (inProgress >= MAX_PARALLEL) {
 		return;
 	}
@@ -288,10 +300,12 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 	}
 	await Promise.all(promises);
 
+	await esRunBatchUpdate();
+
 	if (totalCount === foundCount) {
 		console.log('ES all added', foundCount);
 		esDone = true;
-		checkEnd();
+		await checkEnd();
 		return false;
 	}
 
