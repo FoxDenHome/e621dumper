@@ -300,7 +300,7 @@ async function main() {
 		index: 'e621posts',
 		scroll: '60s',
 		body: {
-			size: 100,
+			size: 1000,
 			query: {
 				bool: {
 					must_not: mustNot,
