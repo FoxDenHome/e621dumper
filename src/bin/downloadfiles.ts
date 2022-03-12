@@ -37,7 +37,7 @@ const agent = new Agent({ keepAlive: true });
 const DOWNLOAD_KIND = ARGS.type;
 const DEST_FOLDER = config.rootdir;
 const MAX_PARALLEL = config.maxParallel;
-const ES_BATCH_SIZE = 1000;
+const ES_BATCH_SIZE = config.esBatchSize;
 
 const EXIT_ERROR_IF_FOUND = !!ARGS.looper;
 
