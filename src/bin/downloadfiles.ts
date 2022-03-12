@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import { getNumericValue, mkdirpFor, pathFixer } from '../lib/utils';
-import { stat, readFile } from 'fs/promises';
+import { stat, readFile, readdir } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
@@ -8,6 +8,7 @@ import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 import { request, Agent } from 'https';
 import { IncomingMessage } from 'http';
 import { EventEmitter } from 'stream';
+import { basename } from 'path';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -69,7 +70,8 @@ const mustNot = [
 
 const RES_SKIP = 'skipped';
 
-const gotFiles = new Set();
+const gotFiles = new Set<string>();
+const listedFiles = new Map<string, Set<string>>();
 
 function setHadErrors() {
 	process.exitCode = 1;
@@ -113,19 +115,30 @@ async function addURL(item: ESItem) {
 	}
 	gotFiles.add(file.dest);
 
-	mkdirpFor(file.dest);
+	const dir = mkdirpFor(file.dest);
 
-	try {
-		const stat_res = await stat(file.dest);
-		if (stat_res && (stat_res.size === file.size || file.size <= 0)) {
-			inProgress++;
-			await downloadDone(file, RES_SKIP);
-			return;
+	if (!listedFiles.has(dir)) {
+		const fileSet = new Set<string>();
+		for (const file of await readdir(dir)) {
+			fileSet.add(file);
 		}
-	} catch (err) {
-		if ((err as any).code !== 'ENOENT') {
-			console.error(err);
-			return;
+		listedFiles.set(dir, fileSet);
+	}
+
+	const files = listedFiles.get(dir)!;
+	if (files.has(basename(file.dest))) {
+		try {
+			const stat_res = await stat(file.dest);
+			if (stat_res && (stat_res.size === file.size || file.size <= 0)) {
+				inProgress++;
+				await downloadDone(file, RES_SKIP);
+				return;
+			}
+		} catch (err) {
+			if ((err as any).code !== 'ENOENT') {
+				console.error(err);
+				return;
+			}
 		}
 	}
 

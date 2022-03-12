@@ -5,12 +5,16 @@ import { mkdirSync } from 'fs';
 const madeDirs = new Set();
 
 export function mkdirpFor(file: string) {
-	return mkdirp(dirname(file));
+	const dir = dirname(file);
+	mkdirp(dir);
+	return dir;
 }
 
-export function mkdirp(dir: string) {
-	dir = normalize(dir);
-
+export function mkdirp(raw_dir: string) {
+	if (madeDirs.has(raw_dir)) {
+		return;
+	}
+	const dir = normalize(raw_dir);
 	if (madeDirs.has(dir)) {
 		return;
 	}
@@ -30,6 +34,7 @@ export function mkdirp(dir: string) {
 		}
 	}
 
+	madeDirs.add(raw_dir);
 	madeDirs.add(dir);
 }
 
