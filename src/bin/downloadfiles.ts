@@ -36,6 +36,8 @@ const agent = new Agent({ keepAlive: true });
 
 const DOWNLOAD_KIND = ARGS.type;
 const DEST_FOLDER = config.rootdir;
+const MAX_PARALLEL = config.maxParallel;
+const ES_BATCH_SIZE = 1000;
 
 const EXIT_ERROR_IF_FOUND = !!ARGS.looper;
 
@@ -45,10 +47,9 @@ const URL_KEY: FileURLKeys = <FileURLKeys>`${DOWNLOAD_KIND}_url`;
 const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
-let MAX_PARALLEL = config.maxParallel;
 let esDone = false;
 
-EventEmitter.defaultMaxListeners = MAX_PARALLEL * 20;
+EventEmitter.defaultMaxListeners = Math.max(ES_BATCH_SIZE * 5, MAX_PARALLEL * 20);
 
 let downloadsPaused = false;
 let pauserInterval: NodeJS.Timeout | undefined = undefined;
@@ -302,7 +303,7 @@ async function main() {
 		index: 'e621posts',
 		scroll: '60s',
 		body: {
-			size: 1000,
+			size: ES_BATCH_SIZE,
 			query: {
 				bool: {
 					must_not: mustNot,
