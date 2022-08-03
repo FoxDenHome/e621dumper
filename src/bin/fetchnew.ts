@@ -120,6 +120,7 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 			pass: config.apiKey,
 		},
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
+		timeout: 10000,
 	});
 	const body = JSON.parse(res).posts;
 	if (body.length < 1) {
@@ -148,6 +149,18 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		minId,
 		maxId,
 	};
+}
+
+async function getPageWithRetry(retries: number, beforeId?: number): Promise<PostPage> {
+	for (let i = 1; i < retries; i++) {
+		try {
+			const res = await getPage(beforeId);
+			return res;
+		} catch (e) {
+			console.error(e);
+		}
+	}
+	return getPage(beforeId);
 }
 
 async function main() {
@@ -181,7 +194,8 @@ async function main() {
 	let beforeId = undefined;
 	while (true) {
 		console.log(`Asking with beforeId = ${beforeId}`);
-		const data: PostPage = await getPage(beforeId);
+		const data: PostPage = await getPageWithRetry(3, beforeId);
+		console.log('Got answer. Inserting into DB...');
 		if (data.items.length < 1) {
 			console.log('Exhausted pages!');
 			break;
