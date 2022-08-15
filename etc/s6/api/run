@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /opt/app
+s6-setuidgid node node ./dist/api/index.js

@@ -1,7 +1,8 @@
 FROM node:lts-alpine
 
-RUN apk add bash curl
+RUN apk add bash curl cronie s6
 
+COPY etc /etc
 COPY . /opt/app
 
 RUN mkdir -p /config && ln -s /config/config.json /opt/app/config.json
@@ -12,4 +13,4 @@ RUN npm ci && npm run build
 VOLUME /config
 VOLUME /data
 
-ENTRYPOINT ["node", "./dist/api/index.js"]
+ENTRYPOINT ["s6-svscan", "/etc/s6"]
