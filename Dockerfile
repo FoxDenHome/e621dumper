@@ -13,4 +13,7 @@ RUN npm ci && npm run build
 VOLUME /config
 VOLUME /data
 
+ENV PUID=1000
+ENV PGID=1000
+
 ENTRYPOINT ["s6-svscan", "/etc/s6"]
