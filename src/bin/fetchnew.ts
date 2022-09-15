@@ -1,8 +1,8 @@
 import { Client } from '@elastic/elasticsearch';
-import * as request from 'request-promise';
 import { readFileSync, writeFileSync } from 'fs';
 import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '../lib/types';
 import { getNumericValue } from '../lib/utils';
+import { requestPromiseReadBody } from '../lib/http';
 
 const config = require('../../config.json');
 const MAX_ID_PATH = config.maxIdPath;
@@ -114,11 +114,8 @@ function normalizer(v: ESPost | APIPost): ESPost {
 }
 
 async function getPage(beforeId?: number): Promise<PostPage> {
-	const res = await request('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&tags=id:<${beforeId}` : ''), {
-		auth: {
-			user: config.apiUser,
-			pass: config.apiKey,
-		},
+	const res = await requestPromiseReadBody('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&tags=id:<${beforeId}` : ''), {
+		auth: `${config.apiUser}:${config.apiKey}`,
 		headers: { 'User-Agent': 'e621updater (Doridian)' },
 		timeout: 10000,
 	});
