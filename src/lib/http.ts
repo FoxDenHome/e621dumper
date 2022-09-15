@@ -19,7 +19,7 @@ export async function requestPromiseReadBody(url: string, options: RequestOption
             data.push(d);
         });
         res.on('end', () => {
-            resolve(data.join());
+            resolve(data.join(''));
         });
     });
 }
