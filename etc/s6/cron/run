@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec crond -n
+exec crond -s -n
