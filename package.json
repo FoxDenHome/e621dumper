@@ -10,7 +10,7 @@
   "dependencies": {
     "@elastic/elasticsearch": "8.4.0",
     "argparse": "2.0.1",
-    "express": "4.18.1"
+    "express": "4.18.2"
   },
   "devDependencies": {
     "@types/argparse": "2.0.10",
