@@ -349,4 +349,8 @@ async function main() {
 	}
 }
 
-main().catch(e => console.error(e.stack || e));
+main().catch(e => {
+	console.error('ES scan error, setting early exit', e.stack || e);
+	esDone = true;
+	setHadErrors();
+}).then(checkEnd);
