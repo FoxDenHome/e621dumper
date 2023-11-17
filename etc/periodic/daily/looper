@@ -1,4 +1,0 @@
-#!/bin/sh
-
-cd /opt/app
-s6-setuidgid "$PUID:$PGID" ./looper.sh
