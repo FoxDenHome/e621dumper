@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo <<EOF > /etc/periodic/daily/looper
+car << EOF > /etc/periodic/daily/looper
 #!/bin/sh
 
 cd /opt/app
