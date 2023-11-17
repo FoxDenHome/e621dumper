@@ -1,4 +1,6 @@
 #!/bin/sh
 
+set -e
+
 cd /opt/app
-s6-setuidgid "${PUID}:${PGID}" node ./dist/api/index.js
+exec s6-setuidgid "${PUID}:${PGID}" node ./dist/api/index.js
