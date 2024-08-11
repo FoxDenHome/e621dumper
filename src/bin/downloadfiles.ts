@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import { getNumericValue, mkdirpFor, pathFixer } from '../lib/utils';
-import { stat, readFile, readdir } from 'fs/promises';
+import { stat, readdir } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
@@ -51,19 +51,6 @@ const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
 let esDone = false;
-
-let downloadsPaused = false;
-let pauserInterval: NodeJS.Timeout | undefined = undefined;
-if (ARGS.pauser) {
-	pauserInterval = setInterval(async () => {
-		const data = await readFile(ARGS.pauser, { encoding: 'ascii' });
-		const newDownloadsPaused = data.toLowerCase().includes('pause');
-		if (downloadsPaused !== newDownloadsPaused) {
-			downloadsPaused = newDownloadsPaused;
-			console.log('Setting pause mode to', downloadsPaused);
-		}
-	}, 1000);
-}
 
 const client = new Client(config.elasticsearch);
 
@@ -116,11 +103,6 @@ async function checkEnd() {
 	if (scanInterval) {
 		clearInterval(scanInterval);
 		scanInterval = undefined;
-	}
-
-	if (pauserInterval) {
-		clearInterval(pauserInterval);
-		pauserInterval = undefined;
 	}
 
 	if (batcherInterval) {
@@ -222,16 +204,6 @@ async function downloadDone(file: QueueEntry, success: boolean | 'skipped', file
 	await checkEnd();
 }
 
-function delay(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function waitWhilePaused() {
-	while (downloadsPaused) {
-		await delay(1000);
-	}
-}
-
 function requestPromise(url: string): Promise<IncomingMessage> {
     return new Promise((resolve, reject) => {
     	request(url, { agent }, resolve).on('error', reject).end();
@@ -254,8 +226,6 @@ async function downloadNext() {
 		return;
 	}
 	inProgress++;
-
-	await waitWhilePaused();
 
 	const out = createWriteStream(file.dest);
 
