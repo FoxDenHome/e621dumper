@@ -15,7 +15,6 @@ const argParse = new ArgumentParser({
 });
 argParse.add_argument('-t', '--type');
 argParse.add_argument('-l', '--looper', { action: 'store_true' });
-argParse.add_argument('-p', '--pauser'); 
 const ARGS = argParse.parse_args();
 
 const config = require('../../config.json');
