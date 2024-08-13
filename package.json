@@ -8,7 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "8.14.0",
+    "@elastic/elasticsearch": "8.15.0",
     "argparse": "2.0.1",
     "express": "4.19.2"
   },
