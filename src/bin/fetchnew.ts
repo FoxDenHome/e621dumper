@@ -116,7 +116,7 @@ function normalizer(v: ESPost | APIPost): ESPost {
 async function getPage(beforeId?: number): Promise<PostPage> {
 	const res = await requestPromiseReadBody('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&tags=id:<${beforeId}` : ''), {
 		auth: `${config.apiUser}:${config.apiKey}`,
-		headers: { 'User-Agent': 'e621updater (Doridian)' },
+		headers: { 'User-Agent': 'e621dumper (Doridian)' },
 		timeout: 10000,
 	});
 	const body = JSON.parse(res).posts;
