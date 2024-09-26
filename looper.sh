@@ -15,6 +15,8 @@ do
 	sleep 10
 done
 
+exit 0
+
 # sleep 10
 # echo 'DL sample'
 # until node dist/bin/downloadfiles.js --type=sample --looper
