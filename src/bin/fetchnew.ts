@@ -8,10 +8,11 @@ const config = require('../../config.json');
 const MAX_ID_PATH = config.maxIdPath;
 const client = new Client(config.elasticsearch);
 
+const POST_AGE_MIN_MS = Number.parseInt(process.env.FETCHNEW_POST_AGE_MIN_SECONDS ?? '86400', 10) * 1000;
+
 interface PostPage {
 	items: ESPost[];
 	minId: number;
-	maxId: number;
 }
 
 interface ESBulkOperation {
@@ -124,7 +125,6 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		return {
 			items: [],
 			minId: 0,
-			maxId: 0,
 		};
 	}
 
@@ -136,15 +136,11 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 		if (id < minId) {
 			minId = id;
 		}
-		if (id > maxId) {
-			maxId = id;
-		}
 	}
 
 	return {
 		items,
 		minId,
-		maxId,
 	};
 }
 
@@ -200,11 +196,12 @@ async function main() {
 
 		const pageQueue: ESQueueEntry[] = [];
 
-		if (data.maxId > _maxId) {
-			_maxId = data.maxId;
-		}
-
 		for (const item of data.items) {
+			if (Date.now() - (new Date(item.created_at).getTime()) < POST_AGE_MIN_MS) {
+				console.log('Post too new, skipping', item.id);
+				continue;
+			}
+
 			pageQueue.push({
 				update: {
 					_id: item.id.toString(10),
@@ -216,6 +213,10 @@ async function main() {
 				doc: item,
 				doc_as_upsert: true,
 			});
+
+			if (item.id > _maxId) {
+				_maxId = item.id;
+			}
 		}
 
 		const result = await client.bulk({
