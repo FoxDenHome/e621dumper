@@ -130,7 +130,7 @@ async function getPage(beforeId?: number): Promise<PostPage> {
 
 	const items = body.map((v: APIPost) => normalizer(v));
 
-	let minId = items[0].id, maxId = items[0].id;
+	let minId = items[0].id;
 	for (const item of items) {
 		const id = item.id;
 		if (id < minId) {
