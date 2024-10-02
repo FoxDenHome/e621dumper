@@ -219,12 +219,16 @@ async function main() {
 			}
 		}
 
-		const result = await client.bulk({
-			body: pageQueue,
-		});
+		if (pageQueue.length <= 0) {
+			console.log('Empty batch! Going to next page...');
+		} else {
+			const result = await client.bulk({
+				body: pageQueue,
+			});
 
-		if (result.errors) {
-			throw new Error(JSON.stringify(result));
+			if (result.errors) {
+				throw new Error(JSON.stringify(result));
+			}
 		}
 
 		if (data.minId <= maxId) {
