@@ -196,9 +196,11 @@ async function main() {
 
 		const pageQueue: ESQueueEntry[] = [];
 
+		let skipCount = 0;
+
 		for (const item of data.items) {
 			if (Date.now() - (new Date(item.created_at).getTime()) < POST_AGE_MIN_MS) {
-				console.log('Post too new, skipping', item.id);
+				skipCount++;
 				continue;
 			}
 
@@ -218,6 +220,8 @@ async function main() {
 				_maxId = item.id;
 			}
 		}
+
+		console.log(`Skipped ${skipCount} posts due to age`);
 
 		if (pageQueue.length <= 0) {
 			console.log('Empty batch! Going to next page...');
