@@ -110,19 +110,22 @@ app.get('/api/v1/posts', async (req: express.Request, res: express.Response) => 
     if (req.query.tags) {
         addNegatableTerms(query, 'tags', req.query.tags as string[] | string);
     }
-    res.send(await processSearch(query, req));
+    try {
+        res.send(await processSearch(query, req));
+    } catch (error) {
+        res.status(400).send({ error: 'Search error' });
+        console.warn(`Search error: ${error}`);
+    }
 });
 
 app.post('/api/v1/posts', async (req: express.Request, res: express.Response) => {
-    let query: Record<string, unknown>;
     try {
-        query = JSON.parse(req.body as string) as Record<string, unknown>;
-    } catch {
-        res.status(400).send({ error: 'Invalid JSON' });
-        return;
+        const query = JSON.parse(req.body as string) as Record<string, unknown>;
+        res.send(await processSearch(query, req));
+    } catch (error) {
+        res.status(400).send({ error: 'Search error' });
+        console.warn(`Search error: ${error}`);
     }
-
-    res.send(await processSearch(query, req));
 });
 
 app.get('/api/v1/healthcheck', async (_: express.Request, res: express.Response) => {
