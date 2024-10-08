@@ -10,11 +10,14 @@ const client = new Client(config.elasticsearch);
 
 app.use(express.text({type: '*/*'}));
 
+const PORT = Number.parseInt(process.env.PORT ?? '8001', 10);
+
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
         url.pathname = `/files/${url.host}${url.pathname}`;
         url.host = req.hostname;
+        url.port = `${PORT}`;
         url.protocol = req.protocol;
         container[field] = url.href;
     }
@@ -105,7 +108,7 @@ app.get('/api/v1/healthcheck', async (_: express.Request, res: express.Response)
     res.send({ ok: true });
 });
 
-app.listen(8001, () => console.log('e621dumper API online'));
+app.listen(PORT, () => console.log('e621dumper API online'));
 
 process.on('SIGTERM', () => {
     process.exit(0);
