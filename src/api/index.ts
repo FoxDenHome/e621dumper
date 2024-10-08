@@ -76,9 +76,13 @@ function addTerms(query: any, field: string, terms: string[], typ = 'must') {
     }
 }
 
-function addNegatableTerms(query: any, field: string, terms: string[]) {
+function addNegatableTerms(query: any, field: string, terms: string[] | string) {
     const posTerms: string[] = [];
     const negTerms: string[] = [];
+
+    if (!Array.isArray(terms)) {
+        terms = [terms];
+    }
 
     for (const term of terms) {
         if (term.startsWith('-')) {
@@ -95,7 +99,7 @@ function addNegatableTerms(query: any, field: string, terms: string[]) {
 app.get('/api/v1/posts', async (req: express.Request, res: express.Response) => {
     const query = {};
     if (req.query.tags) {
-        addNegatableTerms(query, 'tags', req.query.tags.toString().split(' '));
+        addNegatableTerms(query, 'tags', req.query.tags as string[] | string);
     }
     res.send(await processSearch(query, req));
 });
