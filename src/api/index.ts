@@ -40,7 +40,15 @@ function filterESHit(hit: any, req: express.Request): any {
 }
 
 async function processSearch(query: any, req: express.Request) {
-    const size = req.query.limit ? parseInt(req.query.limit.toString(), 10) : 100;
+    const size = req.query.size ? Number.parseInt(req.query.size.toString(), 10) : 100;
+    const from = req.query.from ? Number.parseInt(req.query.from.toString(), 10) : 0;
+
+    if (size < 1 || size > 1000) {
+        throw new Error('Invalid size');
+    }
+    if (from < 0) {
+        throw new Error('Invalid from');
+    }
 
     if (Object.keys(query).length < 1) {
         query.match_all = {};
@@ -50,6 +58,7 @@ async function processSearch(query: any, req: express.Request) {
         index: 'e621posts',
         body: {
             size,
+            from,
             query,
         },
     });
