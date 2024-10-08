@@ -2,7 +2,6 @@ import * as express from 'express';
 
 import { Client } from '@elastic/elasticsearch';
 import { URL } from 'url';
-import * as path from 'node:path';
 
 const config = require('../../config.json');
 
@@ -12,6 +11,7 @@ const client = new Client(config.elasticsearch);
 app.use(express.text({type: '*/*'}));
 
 const PORT = Number.parseInt(process.env.PORT ?? '8001', 10);
+const URL_HOST = process.env.URL_HOST;
 
 app.use('/files', express.static(config.rootdir));
 
@@ -19,8 +19,12 @@ function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
         url.pathname = `/files/${url.host}${url.pathname}`;
-        url.host = req.hostname;
-        url.port = `${PORT}`;
+        if (URL_HOST) {
+            url.host = URL_HOST;
+        } else {
+            url.hostname = req.hostname;
+            url.port = `${PORT}`;
+        }
         url.protocol = req.protocol;
         container[field] = url.href;
     }
