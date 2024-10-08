@@ -2,6 +2,7 @@ import * as express from 'express';
 
 import { Client } from '@elastic/elasticsearch';
 import { URL } from 'url';
+import * as path from 'node:path';
 
 const config = require('../../config.json');
 
@@ -11,6 +12,8 @@ const client = new Client(config.elasticsearch);
 app.use(express.text({type: '*/*'}));
 
 const PORT = Number.parseInt(process.env.PORT ?? '8001', 10);
+
+app.use('/files', express.static(config.rootdir));
 
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
