@@ -8,6 +8,8 @@ const config = require('../../config.json');
 const app = express();
 const client = new Client(config.elasticsearch);
 
+app.use(express.text({type: '*/*'}));
+
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
