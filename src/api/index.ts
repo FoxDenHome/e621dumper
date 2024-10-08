@@ -63,7 +63,11 @@ async function processSearch(query: any, req: express.Request) {
         },
     });
 
-    return res.hits.hits.map((hit: any) => filterESHit(hit, req));
+    for (const hit of res.hits.hits) {
+        filterESHit(hit, req);
+    }
+
+    return res.hits;
 }
 
 function addTerms(query: any, field: string, terms: string[], typ = 'must') {
