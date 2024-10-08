@@ -12,13 +12,14 @@ app.use(express.text({type: '*/*'}));
 
 const PORT = Number.parseInt(process.env.PORT ?? '8001', 10);
 const URL_HOST = process.env.URL_HOST;
+const URL_FILES_PATH = process.env.URL_FILES_PATH ?? '/files';
 
 app.use('/files', express.static(config.rootdir));
 
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
         const url = new URL(container[field]);
-        url.pathname = `/files/${url.host}${url.pathname}`;
+        url.pathname = `${URL_FILES_PATH}/${url.host}${url.pathname}`;
         if (URL_HOST) {
             url.host = URL_HOST;
         } else {
