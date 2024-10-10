@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ ! -z "${LOOPER_DISABLE-}" ]; then
+	echo 'Disabled'
+	exit 0
+fi
+
 echo 'Fetch'
 until node dist/bin/fetchnew.js
 do
