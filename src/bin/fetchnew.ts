@@ -167,10 +167,12 @@ async function main() {
 	if (maxId <= 0) {
 		const maxIdRes = await client.search({
 			index: 'e621posts',
-			aggregations: {
-				max_id: {
-					max: {
-						field: 'id',
+			body: {
+				aggs: {
+					max_id: {
+						max: {
+							field: 'id',
+						},
 					},
 				},
 			},

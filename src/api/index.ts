@@ -57,9 +57,11 @@ async function processSearch(query: any, req: express.Request) {
 
     const res = await client.search({
         index: 'e621posts',
-        size,
-        from,
-        query,
+        body: {
+            size,
+            from,
+            query,
+        },
     });
 
     for (const hit of res.hits.hits) {
