@@ -1,6 +1,6 @@
 {
     "actions" : [
-        { "add" : { "index" : "e621posts_2", "alias" : "e621posts" } }
+        { "add" : { "index" : "e621posts_1", "alias" : "e621posts" } }
     ]
 }
 
