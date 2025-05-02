@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Make sure to change the numbers below!
+
 curl -v -XPOST "$(hostname):9200/_reindex" -H 'Content-Type: application/json' --data-raw '{
   "source": {
     "index": "e621posts_1"
