@@ -1,8 +1,18 @@
 #!/bin/sh
+set -ex
 
-# Make sure to change the numbers below!
-OLDVER=1
-NEWVER=2
+OLDVER="${1-}"
+NEWVER="${2-}"
+
+if [ -z "${OLDVER}" ]; then
+	echo "Provide OLDVER"
+	exit 1
+fi
+
+if [ -z "${NEWVER}" ]; then
+	echo "Provide NEWVER"
+	exit 1
+fi
 
 curl -v -XPOST 'http://elasticsearch:9200/_reindex' -H 'Content-Type: application/json' --data-raw "{
   \"source\": {
