@@ -299,13 +299,11 @@ async function main() {
 	let response = await client.search({
 		index: 'e621posts',
 		scroll: '60s',
-		body: {
-			size: ES_BATCH_SIZE,
-			query: {
-				bool: {
-					must_not: mustNot,
-					must: { exists: { field: URL_KEY } },
-				},
+		size: ES_BATCH_SIZE,
+		query: {
+			bool: {
+				must_not: mustNot,
+				must: { exists: { field: URL_KEY } },
 			},
 		},
 	});
