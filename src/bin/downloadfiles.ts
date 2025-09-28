@@ -1,4 +1,3 @@
-import { Client } from '@elastic/elasticsearch';
 import { getNumericValue, mkdirpFor, pathFixer } from '../lib/utils';
 import { stat, readdir } from 'fs/promises';
 import { createWriteStream } from 'fs';
@@ -9,6 +8,7 @@ import { request, Agent } from 'https';
 import { IncomingMessage } from 'http';
 import { EventEmitter } from 'stream';
 import { basename } from 'path';
+import { client } from '../lib/esclient';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -50,8 +50,6 @@ const SIZE_KEY: FileSizeKeys = <FileSizeKeys>`${DOWNLOAD_KIND}_size`;
 
 let inProgress = 0;
 let esDone = false;
-
-const client = new Client(config.elasticsearch);
 
 const mustNot = [
 	{ term: { [DELETED_KEY]: true } },

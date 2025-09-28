@@ -1,12 +1,11 @@
 import * as express from 'express';
 
-import { Client } from '@elastic/elasticsearch';
 import { URL } from 'url';
+import { client } from '../lib/esclient';
 
 const config = require('../../config.json');
 
 const app = express();
-const client = new Client(config.elasticsearch);
 
 app.use(express.text({type: '*/*'}));
 
