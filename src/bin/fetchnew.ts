@@ -1,12 +1,11 @@
-import { Client } from '@elastic/elasticsearch';
 import { readFileSync, writeFileSync } from 'fs';
 import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '../lib/types';
 import { getNumericValue } from '../lib/utils';
 import { requestPromiseReadBody } from '../lib/http';
+import { client } from '../lib/esclient';
 
 const config = require('../../config.json');
 const MAX_ID_PATH = config.maxIdPath;
-const client = new Client(config.elasticsearch);
 
 const POST_AGE_MIN_MS = Number.parseInt(process.env.FETCHNEW_POST_AGE_MIN_SECONDS ?? '86400', 10) * 1000;
 
