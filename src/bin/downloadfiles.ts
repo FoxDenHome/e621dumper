@@ -11,9 +11,6 @@ import { client } from '../lib/osclient';
 import { Core_Bulk } from '@opensearch-project/opensearch/api/_types';
 import { Search_Response } from '@opensearch-project/opensearch/api';
 import { DOWNLOAD_PATH } from '../lib/config';
-import { configDotenv } from 'dotenv';
-
-configDotenv();
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
