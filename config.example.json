@@ -1,8 +1,0 @@
-{
-	"apiUser": "",
-	"apiKey": "",
-	"rootdir": "/mnt/hdd/files/",
-	"maxIdPath": "/mnt/e621.maxid",
-	"maxParallel": 16,
-	"osBatchSize": 1000
-}

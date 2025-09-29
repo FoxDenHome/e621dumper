@@ -4,5 +4,4 @@ node_modules
 .eslintcache
 .env
 /e621.maxid
-/config.json
 /tmp

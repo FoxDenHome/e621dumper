@@ -3,8 +3,6 @@ import * as express from 'express';
 import { URL } from 'url';
 import { client } from '../lib/osclient';
 
-const config = require('../../config.json');
-
 const app = express();
 
 app.use(express.text({type: '*/*'}));
@@ -14,7 +12,7 @@ const HOST = process.env.HOST ?? '127.0.0.1';
 const { URL_HOST, URL_PROTOCOL } = process.env;
 const URL_FILES_PATH = process.env.URL_FILES_PATH ?? '/files';
 
-app.use('/files', express.static(config.rootdir));
+app.use('/files', express.static(process.env.DOWNLOAD_PATH ?? './downloads'));
 
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {

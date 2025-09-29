@@ -18,8 +18,6 @@ argParse.add_argument('-t', '--type');
 argParse.add_argument('-l', '--looper', { action: 'store_true' });
 const ARGS = argParse.parse_args();
 
-const config = require('../../config.json');
-
 interface QueueEntry {
 	url?: string,
 	size: number,
@@ -38,9 +36,9 @@ let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCoun
 const agent = new Agent({ keepAlive: true });
 
 const DOWNLOAD_KIND = ARGS.type;
-const DEST_FOLDER = config.rootdir;
-const MAX_PARALLEL = config.maxParallel;
-const OS_BATCH_SIZE = config.osBatchSize;
+const DEST_FOLDER = process.env.DOWNLOAD_PATH ?? './downloads';
+const MAX_PARALLEL = Number.parseInt(process.env.MAX_PARALLEL ?? '5', 10);
+const OS_BATCH_SIZE = Number.parseInt(process.env.OS_BATCH_SIZE ?? '1000', 10);
 
 const EXIT_ERROR_IF_FOUND = !!ARGS.looper;
 

@@ -4,8 +4,11 @@ import { getNumericValue } from '../lib/utils';
 import { requestPromiseReadBody } from '../lib/http';
 import { client } from '../lib/osclient';
 
-const config = require('../../config.json');
-const MAX_ID_PATH = config.maxIdPath;
+const DEST_FOLDER = process.env.DOWNLOAD_PATH ?? './downloads';
+const MAX_ID_PATH = `${DEST_FOLDER}/e621.maxid`;
+
+const API_USER = process.env.API_USER ?? '';
+const API_KEY = process.env.API_KEY ?? '';
 
 const POST_AGE_MIN_MS = Number.parseInt(process.env.FETCHNEW_POST_AGE_MIN_SECONDS ?? '86400', 10) * 1000;
 
@@ -115,7 +118,7 @@ function normalizer(v: ESPost | APIPost): ESPost {
 
 async function getPage(beforeId?: number): Promise<PostPage> {
 	const res = await requestPromiseReadBody('https://e621.net/posts.json?limit=320&typed_tags=1' + (beforeId ? `&tags=id:<${beforeId}` : ''), {
-		auth: `${config.apiUser}:${config.apiKey}`,
+		auth: `${API_USER}:${API_KEY}`,
 		headers: { 'User-Agent': 'e621dumper (Doridian)' },
 		timeout: 10000,
 	});
