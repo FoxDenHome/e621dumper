@@ -4,5 +4,5 @@
 	"rootdir": "/mnt/hdd/files/",
 	"maxIdPath": "/mnt/e621.maxid",
 	"maxParallel": 16,
-	"esBatchSize": 1000
+	"osBatchSize": 1000
 }

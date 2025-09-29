@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '../lib/types';
 import { getNumericValue } from '../lib/utils';
 import { requestPromiseReadBody } from '../lib/http';
-import { client } from '../lib/esclient';
+import { client } from '../lib/osclient';
 
 const config = require('../../config.json');
 const MAX_ID_PATH = config.maxIdPath;
@@ -17,7 +17,7 @@ interface PostPage {
 interface ESBulkOperation {
 	update: {
 		_id: string;
-		_index: 'e621posts';
+		_index: 'e621dumper_posts';
 		retry_on_conflict: number;
 	};
 }
@@ -165,16 +165,18 @@ async function main() {
 
 	if (maxId <= 0) {
 		const maxIdRes = await client.search({
-			index: 'e621posts',
-			aggregations: {
-				max_id: {
-					max: {
-						field: 'id',
+			index: 'e621dumper_posts',
+			body: {
+				aggregations: {
+					max_id: {
+						max: {
+							field: 'id',
+						},
 					},
 				},
 			},
 		});
-		maxId = getNumericValue(maxIdRes!.aggregations!.max_id);
+		maxId = getNumericValue(maxIdRes!.body.aggregations!.max_id);
 	}
 
 	console.log(`Starting with maxId = ${maxId}`);
@@ -204,7 +206,7 @@ async function main() {
 			pageQueue.push({
 				update: {
 					_id: item.id.toString(10),
-					_index : 'e621posts',
+					_index : 'e621dumper_posts',
 					retry_on_conflict: 3,
 				},
 			});
@@ -227,7 +229,7 @@ async function main() {
 				body: pageQueue,
 			});
 
-			if (result.errors) {
+			if (result.body.errors) {
 				throw new Error(JSON.stringify(result));
 			}
 		}

@@ -14,23 +14,23 @@ if [ -z "${NEWVER}" ]; then
 	exit 1
 fi
 
-curl -f -v -XPUT -H 'Content-Type: application/json' "http://elasticsearch:9200/e621posts_${NEWVER}" --data @index.json
+curl -f -v -XPUT -H 'Content-Type: application/json' "http://opensearch:9200/e621dumper_posts_${NEWVER}" --data @index.json
 
-curl -f -v -XPOST 'http://elasticsearch:9200/_reindex' -H 'Content-Type: application/json' --data-raw "{
+curl -f -v -XPOST 'http://opensearch:9200/_reindex' -H 'Content-Type: application/json' --data-raw "{
   \"source\": {
-    \"index\": \"e621posts_${OLDVER}\"
+    \"index\": \"e621dumper_posts_${OLDVER}\"
   },
   \"dest\": {
-    \"index\": \"e621posts_${NEWVER}\"
+    \"index\": \"e621dumper_posts_${NEWVER}\"
   }
 }"
 
-curl -f -v -XPOST 'http://elasticsearch:9200/_aliases' -H 'Content-Type: application/json' --data-raw "{
+curl -f -v -XPOST 'http://opensearch:9200/_aliases' -H 'Content-Type: application/json' --data-raw "{
     \"actions\" : [
-        { \"add\": { \"index\": \"e621posts_${NEWVER}\", \"alias\": \"e621posts\" } },
-        { \"remove\": { \"index\" : \"e621posts_${OLDVER}\", \"alias\": \"e621posts\" } }
+        { \"add\": { \"index\": \"e621dumper_posts_${NEWVER}\", \"alias\": \"e621dumper_posts\" } },
+        { \"remove\": { \"index\" : \"e621dumper_posts_${OLDVER}\", \"alias\": \"e621dumper_posts\" } }
     ]
 }"
 
 echo 'Run the following commands to delete the old indices:'
-echo "curl -XDELETE 'http://elasticsearch:9200/e621posts_${OLDVER}'"
+echo "curl -XDELETE 'http://opensearch:9200/e621dumper_posts_${OLDVER}'"

@@ -3,12 +3,13 @@ import { stat, readdir } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { ESItem, ESPost, FileDeletedKeys, FileDownloadedKeys, FileURLKeys, FileSizeKeys } from '../lib/types';
 import { ArgumentParser } from 'argparse';
-import { BulkOperationContainer, BulkUpdateAction, SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 import { request, Agent } from 'https';
 import { IncomingMessage } from 'http';
 import { EventEmitter } from 'stream';
 import { basename } from 'path';
-import { client } from '../lib/esclient';
+import { client } from '../lib/osclient';
+import { Core_Bulk } from '@opensearch-project/opensearch/api/_types';
+import { Search_Response } from '@opensearch-project/opensearch/api';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -28,10 +29,10 @@ interface QueueEntry {
 	dest: string,
 };
 
-type ESBulkType = BulkOperationContainer | BulkUpdateAction<ESPost, Partial<ESPost>>;
+type OSBulkType = Core_Bulk.OperationContainer | Core_Bulk.UpdateAction;
 
 const queue: QueueEntry[] = [];
-let esQueue: ESBulkType[] = [];
+let osQueue: OSBulkType[] = [];
 let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCount = 0, totalCount = 0, listCount = 0;
 
 const agent = new Agent({ keepAlive: true });
@@ -39,7 +40,7 @@ const agent = new Agent({ keepAlive: true });
 const DOWNLOAD_KIND = ARGS.type;
 const DEST_FOLDER = config.rootdir;
 const MAX_PARALLEL = config.maxParallel;
-const ES_BATCH_SIZE = config.esBatchSize;
+const OS_BATCH_SIZE = config.osBatchSize;
 
 const EXIT_ERROR_IF_FOUND = !!ARGS.looper;
 
@@ -71,17 +72,17 @@ function printStats() {
 printStats();
 let scanInterval: NodeJS.Timeout | undefined = setInterval(printStats, 10000);
 
-const ES_BATCH_SIZE_2 = ES_BATCH_SIZE * 2;
-async function esRunBatchUpdate(min: number) {
-	if (esQueue.length < min) {
+const OS_BATCH_SIZE_2 = OS_BATCH_SIZE * 2;
+async function osRunBatchUpdate(min: number) {
+	if (osQueue.length < min) {
 		return;
 	}
-	const todo = esQueue;
-	esQueue = [];
+	const todo = osQueue;
+	osQueue = [];
 	
 	try {
 		await client.bulk({
-			operations: todo,
+			body: todo,
 		});
 		console.log('Processed', todo.length / 2, 'batched updates');
 	} catch (err) {
@@ -90,7 +91,7 @@ async function esRunBatchUpdate(min: number) {
 	}
 }
 
-let batcherInterval: NodeJS.Timeout | undefined = setInterval(() => esRunBatchUpdate(ES_BATCH_SIZE_2), 1000);
+let batcherInterval: NodeJS.Timeout | undefined = setInterval(() => osRunBatchUpdate(OS_BATCH_SIZE_2), 1000);
 
 async function checkEnd() {
 	if (queue.length > 0 || inProgress > 0 || !esDone) {
@@ -107,7 +108,7 @@ async function checkEnd() {
 		batcherInterval = undefined;
 	}
 
-	await esRunBatchUpdate(1);
+	await osRunBatchUpdate(1);
 }
 
 async function addURL(item: ESItem) {
@@ -189,9 +190,9 @@ async function downloadDone(file: QueueEntry, success: boolean | 'skipped', file
 		return;
 	}
 
-	esQueue.push({
+	osQueue.push({
 		update: {
-			_index: 'e621posts',
+			_index: 'e621dumper_posts',
 			_id: file.id,
 		},
 	}, {
@@ -268,8 +269,8 @@ async function downloadNext() {
 	}
 }
 
-async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
-	totalCount = getNumericValue(response.hits.total);
+async function getMoreUntilDone(response: Search_Response): Promise<boolean> {
+	totalCount = getNumericValue(response.body.hits.total);
 
 	if (totalCount > 0 && EXIT_ERROR_IF_FOUND && !process.exitCode) {
 		process.exitCode = 2;
@@ -277,9 +278,9 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 
 	// collect all the records
 	const promises: Promise<void>[] = [];
-	for (const hit of response.hits.hits) {
+	for (const hit of response.body.hits.hits) {
 		foundCount++;
-		promises.push(addURL(hit as ESItem));
+		promises.push(addURL(hit as unknown as ESItem));
 	}
 	await Promise.all(promises);
 
@@ -295,20 +296,22 @@ async function getMoreUntilDone(response: SearchResponse): Promise<boolean> {
 
 async function main() {
 	let response = await client.search({
-		index: 'e621posts',
+		index: 'e621dumper_posts',
 		scroll: '60s',
-		size: ES_BATCH_SIZE,
-		query: {
-			bool: {
-				must_not: mustNot,
-				must: { exists: { field: URL_KEY } },
+		size: OS_BATCH_SIZE,
+		body: {
+			query: {
+				bool: {
+					must_not: mustNot,
+					must: { exists: { field: URL_KEY } },
+				},
 			},
 		},
 	});
 
 	while (await getMoreUntilDone(response)) {
 		response = await client.scroll({
-			scroll_id: response._scroll_id,
+			scroll_id: response.body._scroll_id,
 			scroll: '60s',
 		});
 	}

@@ -1,7 +1,7 @@
 import * as express from 'express';
 
 import { URL } from 'url';
-import { client } from '../lib/esclient';
+import { client } from '../lib/osclient';
 
 const config = require('../../config.json');
 
@@ -55,17 +55,19 @@ async function processSearch(query: any, req: express.Request) {
     }
 
     const res = await client.search({
-        index: 'e621posts',
+        index: 'e621dumper_posts',
         size,
         from,
-        query,
+        body: {
+            query,
+        },
     });
 
-    for (const hit of res.hits.hits) {
+    for (const hit of res.body.hits.hits) {
         filterESHit(hit, req);
     }
 
-    return res.hits;
+    return res.body.hits;
 }
 
 function addTerms(query: any, field: string, terms: string[], typ = 'must') {
