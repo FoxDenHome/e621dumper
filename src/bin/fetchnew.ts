@@ -3,9 +3,10 @@ import { TagType, APIPost, APINestedTags, ESPost, TagClass, tagTypeMap } from '.
 import { getNumericValue } from '../lib/utils';
 import { requestPromiseReadBody } from '../lib/http';
 import { client } from '../lib/osclient';
+import { join } from 'path';
 
-const DEST_FOLDER = process.env.DOWNLOAD_PATH ?? './downloads';
-const MAX_ID_PATH = `${DEST_FOLDER}/e621.maxid`;
+const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH ?? './downloads';
+const MAX_ID_PATH = join(DOWNLOAD_PATH, 'e621.maxid');
 
 const API_USER = process.env.API_USER ?? '';
 const API_KEY = process.env.API_KEY ?? '';
