@@ -13,7 +13,7 @@ const HOST = process.env.HOST ?? '127.0.0.1';
 const { URL_HOST, URL_PROTOCOL } = process.env;
 const URL_FILES_PATH = process.env.URL_FILES_PATH ?? '/files';
 
-app.use('/files', DOWNLOAD_PATH);
+app.use('/files', express.static(DOWNLOAD_PATH));
 
 function filterURL(container: any, field: string, req: express.Request) {
     if (container[field]) {
