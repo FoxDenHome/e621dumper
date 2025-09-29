@@ -3,6 +3,9 @@ import * as express from 'express';
 import { URL } from 'url';
 import { client } from '../lib/osclient';
 import { DOWNLOAD_PATH } from '../lib/config';
+import { configDotenv } from 'dotenv';
+
+configDotenv();
 
 const app = express();
 
