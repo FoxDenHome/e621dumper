@@ -4,8 +4,8 @@ import { getNumericValue } from '../lib/utils';
 import { requestPromiseReadBody } from '../lib/http';
 import { client } from '../lib/osclient';
 import { join } from 'path';
+import { DOWNLOAD_PATH } from '../lib/config';
 
-const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH ?? './downloads';
 const MAX_ID_PATH = join(DOWNLOAD_PATH, 'e621.maxid');
 
 const API_USER = process.env.API_USER ?? '';

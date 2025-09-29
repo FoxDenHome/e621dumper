@@ -10,6 +10,7 @@ import { basename, join } from 'path';
 import { client } from '../lib/osclient';
 import { Core_Bulk } from '@opensearch-project/opensearch/api/_types';
 import { Search_Response } from '@opensearch-project/opensearch/api';
+import { DOWNLOAD_PATH } from '../lib/config';
 
 const argParse = new ArgumentParser({
 	description: 'e621 downloadfiles'
@@ -36,7 +37,6 @@ let doneCount = 0, errorCount = 0, successCount = 0, skippedCount = 0, foundCoun
 const agent = new Agent({ keepAlive: true });
 
 const DOWNLOAD_KIND = ARGS.type;
-const DOWNLOAD_PATH = process.env.DOWNLOAD_PATH ?? './downloads';
 const MAX_PARALLEL = Number.parseInt(process.env.MAX_PARALLEL ?? '5', 10);
 const OS_BATCH_SIZE = Number.parseInt(process.env.OS_BATCH_SIZE ?? '1000', 10);
 
