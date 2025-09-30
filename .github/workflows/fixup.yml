@@ -1,7 +1,11 @@
 name: Fixup
 
 on:
-  push: {}
+    pull_request:
+        types:
+            - opened
+            - reopened
+            - synchronize
 
 concurrency:
     group: fixup-${{ github.ref }}
@@ -21,6 +25,12 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Fix flake.nix npmDepsHash
-        run: ./.github/fix-flake-hashes.sh
-      - name: Check if anything changed
-        run: echo TODO
+        run: |
+          HASH="$(nix run nixpkgs#prefetch-npm-deps package-lock.json)"
+          echo "New hash: $HASH"
+          sed "s~npmDepsHash = \".*\"~npmDepsHash = \"$HASH\"~g" -i flake.nix
+      - uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          commit_message: "fixup: update npmDepsHash"
+          branch: ${{ github.ref_name }}/fixup-npm-deps-hash
+          push_options: '--force'
