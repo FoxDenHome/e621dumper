@@ -3,6 +3,7 @@
   "extends": [
     "config:recommended"
   ],
+  "allowedCommands": ["^\\./\\.github/fix-flake-hashes\\.sh$"],
   "postUpgradeTasks": {
     "commands": [
         "./.github/fix-flake-hashes.sh"
