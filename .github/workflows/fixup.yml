@@ -8,7 +8,7 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-  fixup-npm-deps-hash:
+  fixup_npm_deps_hash:
     runs-on: ubuntu-latest
 
     permissions:

@@ -1,0 +1,59 @@
+name: Run linter and build
+
+on:
+    pull_request:
+        types:
+            - opened
+            - reopened
+            - synchronize
+    merge_group: {}
+    workflow_call:
+      inputs:
+        sha:
+          required: false
+          type: string
+
+jobs:
+    lint_and_build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            checks: write
+        steps:
+            - name: Check out the repo
+              uses: actions/checkout@v5
+              with:
+                  ref: ${{ inputs.sha || github.sha }}
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: lts/*
+                  check-latest: true
+                  cache: npm
+                  cache-dependency-path: package-lock.json
+            - name: Install Node.js dependencies
+              run: npm ci
+            - name: Run linters
+              run: npm run lint
+            - name: Update Docker version
+              env:
+                  DOCKER_CLI_EXPERIMENTAL: enabled
+              uses: docker/setup-docker-action@v4
+              with:
+                  channel: stable
+                  daemon-config: |
+                      {
+                        "features": {
+                          "containerd-snapshotter": true
+                        }
+                      }
+            - name: Test build container image
+              uses: docker/build-push-action@v6
+              with:
+                  push: false
+                  build-args: |
+                      GIT_REVISION=${{ github.sha }}
+                  tags: |
+                      ghcr.io/foxdenhome/e621dumper/e621dumper:latest
+                  cache-from: type=gha
+                  cache-to: type=gha

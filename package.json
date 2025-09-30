@@ -5,7 +5,8 @@
   "author": "Doridian",
   "license": "ISC",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "echo TODO"
   },
   "dependencies": {
     "@opensearch-project/opensearch": "^3.5.1",
