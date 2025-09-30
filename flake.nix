@@ -14,7 +14,7 @@
             pname = "e621dumper";
             version = "1.0.0";
             src = ./.;
-            npmDepsHash = "sha256-Qu93Cx4wmt2aMznRQyfJGIcaflB7FWMsuELGkQ0kCV8=";
+            npmDepsHash = "sha256-1wUk9DrcXSMiCMw3gg4ZnNIBWgj5gAJjl0hnWhF9uR4=";
           };
         };
       });
