@@ -16,8 +16,10 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
+      - name: Fix flake.nix npmDepsHash
+        run: |
           HASH="$(nix run nixpkgs#prefetch-npm-deps package-lock.json)"
+          echo "New hash: $HASH"
           sed "s/npmDepsHash = \".*\"/npmDepsHash = \"$HASH\"/g" -i flake.nix
       - uses: stefanzweifel/git-auto-commit-action@v6
         with:
