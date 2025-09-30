@@ -14,6 +14,10 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      commit_hash: ${{ steps.auto_commit.outputs.commit_hash }}
+      changes_detected: ${{ steps.auto_commit.outputs.changes_detected }}
+
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
@@ -32,11 +36,12 @@ jobs:
           branch: ${{ github.ref_name }}
 
   lint_and_build:
+    if: ${{ needs.fixup_npm_deps_hash.outputs.changes_detected == 'true' }}
     permissions:
         contents: read
         checks: write
     uses: ./.github/workflows/lint_build.yml
     with:
-      sha: ${{ needs.fixup_npm_deps_hash.result.auto_commit.outputs.commit_hash }}
+      sha: ${{ needs.fixup_npm_deps_hash.outputs.commit_hash }}
     needs: [fixup_npm_deps_hash]
     secrets: inherit
