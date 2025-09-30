@@ -8,7 +8,7 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-  fixup-npm-deps-hash:
+  fixup_npm_deps_hash:
     runs-on: ubuntu-latest
 
     permissions:
@@ -26,6 +26,17 @@ jobs:
           echo "New hash: $HASH"
           sed "s~npmDepsHash = \".*\"~npmDepsHash = \"$HASH\"~g" -i flake.nix
       - uses: stefanzweifel/git-auto-commit-action@v6
+        id: auto_commit
         with:
           commit_message: "fixup: update npmDepsHash"
           branch: ${{ github.ref_name }}
+
+  lint_and_build:
+    permissions:
+        contents: read
+        checks: write
+    uses: ./.github/workflows/lint_build.yml
+    with:
+      sha: ${{ needs.fixup_npm_deps_hash.result.auto_commit.outputs.commit_hash }}
+    needs: [fixup_npm_deps_hash]
+    secrets: inherit
