@@ -22,8 +22,8 @@ jobs:
         steps:
             - name: Check out the repo
               uses: actions/checkout@v5
-            - name: Get us in a detached head state on purpose
-              run: git checkout ${{ inputs.sha || github.sha }}
+              with:
+                  ref: ${{ inputs.sha || github.sha }}
             - name: Set up Node.js
               uses: actions/setup-node@v5
               with:
