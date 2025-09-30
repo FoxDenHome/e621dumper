@@ -1,0 +1,56 @@
+name: Run release build
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: true
+
+on:
+    push:
+        branches:
+            - main
+    workflow_call: {}
+
+jobs:
+    lint_and_build:
+        permissions:
+            contents: read
+            checks: write
+        uses: ./.github/workflows/lint_build.yml
+        secrets: inherit
+    release:
+        runs-on: ubuntu-latest
+        needs: [lint_and_build]
+        permissions:
+            contents: write
+            packages: write
+        steps:
+            - name: Check out the repo
+              uses: actions/checkout@v5
+            - name: Update Docker version
+              env:
+                  DOCKER_CLI_EXPERIMENTAL: enabled
+              uses: docker/setup-docker-action@v4
+              with:
+                  channel: stable
+                  daemon-config: |
+                      {
+                        "features": {
+                          "containerd-snapshotter": true
+                        }
+                      }
+            - name: Log in to GitHub Docker Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Build container image
+              uses: docker/build-push-action@v6
+              with:
+                  push: true
+                  build-args: |
+                      GIT_REVISION=${{ github.sha }}
+                  tags: |
+                      ghcr.io/foxdenhome/e621dumper/e621dumper:latest
+                  cache-from: type=gha
+                  cache-to: type=gha
