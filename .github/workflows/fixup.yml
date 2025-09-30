@@ -3,6 +3,10 @@ name: Fixup
 on:
   push: {}
 
+concurrency:
+    group: fixup-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
   fixup-npm-deps-hash:
     runs-on: ubuntu-latest
