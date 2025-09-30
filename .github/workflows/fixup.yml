@@ -33,5 +33,5 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: "fixup: update npmDepsHash"
-          branch: refs/fixup-npm-deps-hash/${{ github.ref_name }}
+          branch: fixup-npm-deps-hash/${{ github.ref_name }}
           push_options: '--force'
