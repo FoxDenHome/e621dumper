@@ -13,6 +13,6 @@ statements:
       # === Subject Pattern Variables ===
       # ${origin} - the origin repository name e.g. qoomon/sandbox
 
-      - repo:${origin}
+      - repo:${origin}:pull_request
     permissions:
       contents: write

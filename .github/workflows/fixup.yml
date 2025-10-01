@@ -1,7 +1,6 @@
 name: Fixup
 
 on:
-    merge_group: {}
     pull_request:
         types:
             - opened
