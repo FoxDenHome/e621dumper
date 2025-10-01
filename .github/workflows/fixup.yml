@@ -23,7 +23,7 @@ jobs:
       - uses: qoomon/actions--access-token@v3
         id: access-token
         with:
-          repository: FoxDenHome/e621dumper
+          repository: github.com/FoxDenHome/e621dumper
           permissions: |
             contents: write
       - uses: actions/checkout@v5
