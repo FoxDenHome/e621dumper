@@ -20,6 +20,12 @@ jobs:
       contents: write
 
     steps:
+      - uses: qoomon/actions--access-token@v3
+        id: access-token
+        with:
+          repository: FoxDenHome/e621dumper
+          permissions: |
+            contents: write
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
         with:
@@ -35,3 +41,4 @@ jobs:
           commit_message: "fixup: update npmDepsHash"
           branch: fixup-npm-deps-hash/${{ github.ref_name }}
           push_options: '--force'
+          token: ${{ steps.access-token.outputs.token }}
