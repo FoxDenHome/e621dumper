@@ -26,6 +26,8 @@ jobs:
           permissions: |
             contents: write
       - uses: actions/checkout@v5
+        with:
+          token: ${{ steps.access-token.outputs.token }}
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
@@ -38,6 +40,3 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: "fixup: update npmDepsHash"
-          branch: fixup-npm-deps-hash/${{ github.ref_name }}
-          push_options: '--force'
-          token: ${{ steps.access-token.outputs.token }}
