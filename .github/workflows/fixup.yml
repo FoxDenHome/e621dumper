@@ -18,6 +18,7 @@ jobs:
 
     permissions:
       contents: write
+      id-token: write
 
     steps:
       - uses: qoomon/actions--access-token@v3
