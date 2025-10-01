@@ -14,7 +14,8 @@
             pname = "e621dumper";
             version = "1.0.0";
             src = ./.;
-            npmDepsHash = "sha256-OwOk9DrcXSMiCMw3gg4ZnNIBWgj5gAJjl0hnWhF9uR4=";
+            npmDeps = pkgs.importNpmLock { npmRoot = ./.; };
+            npmConfigHook = pkgs.importNpmLock.npmConfigHook;
           };
         };
       });
