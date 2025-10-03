@@ -7,16 +7,18 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-      in
-      {
-        packages = {
-          default = pkgs.buildNpmPackage {
+        package = pkgs.buildNpmPackage {
             pname = "e621dumper";
             version = "1.0.0";
             src = ./.;
             npmDeps = pkgs.importNpmLock { npmRoot = ./.; };
             npmConfigHook = pkgs.importNpmLock.npmConfigHook;
           };
+      in
+      {
+        packages = {
+          default = package;
+          e621dumper = package;
         };
       });
 }
