@@ -1,11 +1,11 @@
-name: Run linter and build
+name: Run linter
 
 on:
     pull_request:
     push:
 
 jobs:
-    lint_and_build:
+    lint:
         runs-on: ubuntu-latest
         permissions:
             contents: read
