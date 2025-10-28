@@ -17,7 +17,7 @@
   "devDependencies": {
     "@types/argparse": "2.0.17",
     "@types/express": "5.0.5",
-    "@types/node": "^22.17.1",
+    "@types/node": "^24.0.0",
     "typescript": "5.9.3"
   }
 }
