@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -ex
+
 exec curl -v -XPOST -H 'Content-Type: application/json' 'http://opensearch:9200/e621dumper_posts/_update_by_query?conflicts=proceed' --data-raw '{
     "script":
     {
