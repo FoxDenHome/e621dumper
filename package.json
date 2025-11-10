@@ -5,7 +5,7 @@
   "author": "Doridian",
   "license": "ISC",
   "bin": {
-    "e621dumper-server": "./dist/api/index.js",
+    "e621dumper-api": "./dist/api/index.js",
     "e621dumper-downloadfiles": "./dist/bin/downloadfiles.js",
     "e621dumper-fetchnew": "./dist/bin/fetchnew.js"
   },
